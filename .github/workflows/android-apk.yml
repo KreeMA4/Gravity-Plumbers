@@ -1,0 +1,218 @@
+# Builds an installable DEBUG APK of Gravity Plumbers with Godot 4.6.
+# Order: static checks -> Godot import -> logic tests -> smoke tests (headless
+# + real OpenGL rendering) -> physics soak test -> Android export -> APK
+# verification -> upload. Any failing step stops the pipeline.
+# Debug signing keys are generated fresh on every run and never committed.
+name: Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - claude/gravity-plumbers-godot-fujx19
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+      - "dist/**"
+      - "LICENSE"
+
+concurrency:
+  group: android-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  GODOT_VERSION: "4.6"
+  GODOT_STATUS: "stable"
+  APK_NAME: GravityPlumbers-Android-Debug.apk
+
+jobs:
+  build-android:
+    name: Check, test and export APK
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ---------------------------------------------------------------- tools
+      - name: Set up Python (validator + GDScript parser)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up JDK 17 (required by Godot 4.6 Android export)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: "platform-tools build-tools;35.0.0 platforms;android-35"
+
+      - name: Cache Godot editor + export templates
+        id: godot-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/godot-dl
+          key: godot-${{ env.GODOT_VERSION }}-${{ env.GODOT_STATUS }}-v1
+
+      - name: Download Godot ${{ env.GODOT_VERSION }}-${{ env.GODOT_STATUS }}
+        if: steps.godot-cache.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p ~/godot-dl && cd ~/godot-dl
+          BASE="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-${GODOT_STATUS}"
+          curl -fsSL --retry 4 -o editor.zip "$BASE/Godot_v${GODOT_VERSION}-${GODOT_STATUS}_linux.x86_64.zip"
+          curl -fsSL --retry 4 -o templates.tpz "$BASE/Godot_v${GODOT_VERSION}-${GODOT_STATUS}_export_templates.tpz"
+          ls -la
+
+      - name: Install Godot and the matching export templates
+        run: |
+          set -euo pipefail
+          mkdir -p ~/godot && cd ~/godot
+          unzip -o -q ~/godot-dl/editor.zip
+          mv -f Godot_v${GODOT_VERSION}-${GODOT_STATUS}_linux.x86_64 godot
+          chmod +x godot
+          TPL=~/.local/share/godot/export_templates/${GODOT_VERSION}.${GODOT_STATUS}
+          mkdir -p "$TPL"
+          unzip -o -q ~/godot-dl/templates.tpz -d /tmp/tpl
+          cp -r /tmp/tpl/templates/* "$TPL/"
+          echo "Templates version: $(cat "$TPL/version.txt")"
+          test "$(cat "$TPL/version.txt")" = "${GODOT_VERSION}.${GODOT_STATUS}"
+          ls "$TPL" | grep android
+          echo "GODOT=$HOME/godot/godot" >> "$GITHUB_ENV"
+          ~/godot/godot --version
+
+      - name: Generate temporary debug keystore + editor settings
+        run: |
+          set -euo pipefail
+          KS="$RUNNER_TEMP/debug.keystore"
+          # Standard Android debug credentials, made fresh for this run only (never committed).
+          keytool -genkeypair -v -keystore "$KS" -storepass android -alias androiddebugkey \
+            -keypass android -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname "CN=Android Debug,O=Android,C=US"
+          echo "GODOT_ANDROID_KEYSTORE_DEBUG_PATH=$KS" >> "$GITHUB_ENV"
+          echo "GODOT_ANDROID_KEYSTORE_DEBUG_USER=androiddebugkey" >> "$GITHUB_ENV"
+          echo "GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD=android" >> "$GITHUB_ENV"
+          mkdir -p ~/.config/godot
+          for f in editor_settings-4.tres editor_settings-${GODOT_VERSION}.tres; do
+            cat > ~/.config/godot/$f <<EOF
+          [gd_resource type="EditorSettings" format=3]
+
+          [resource]
+          export/android/android_sdk_path = "${ANDROID_SDK_ROOT}"
+          export/android/java_sdk_path = "${JAVA_HOME}"
+          export/android/debug_keystore = "${KS}"
+          export/android/debug_keystore_user = "androiddebugkey"
+          export/android/debug_keystore_pass = "android"
+          EOF
+            sed -i 's/^          //' ~/.config/godot/$f
+          done
+          cat ~/.config/godot/editor_settings-${GODOT_VERSION}.tres
+
+      # --------------------------------------------------------- static checks
+      - name: Static checks (project validator + full GDScript parse)
+        run: |
+          echo "## Gravity Plumbers CI" >> "$GITHUB_STEP_SUMMARY"
+          pip install --quiet "gdtoolkit==4.*"
+          python3 tools/validate_project.py
+          echo "- **static validation + gdtoolkit parse**: PASS" >> "$GITHUB_STEP_SUMMARY"
+
+      # --------------------------------------------------------------- Godot
+      - name: Godot headless import
+        run: >
+          python3 tools/ci/run_godot.py --name "Godot import" --log ci_logs/import.log --timeout 900 --
+          "$GODOT" --headless --path . --import
+
+      - name: Logic tests (tests/run_all.gd)
+        run: >
+          python3 tools/ci/run_godot.py --name "logic tests" --log ci_logs/tests.log --timeout 300
+          --expect "^[1-9][0-9]* passed, 0 failed" --
+          "$GODOT" --headless --path . -s res://tests/run_all.gd
+
+      - name: Headless smoke tests (boot every screen and level)
+        run: |
+          set -uo pipefail
+          FAILED=0
+          run() {  # name, expect-regex, user args...
+            local name="$1"; local expect="$2"; shift 2
+            python3 tools/ci/run_godot.py --name "smoke: $name" --log "ci_logs/smoke_${name}.log" --timeout 300 \
+              --expect "$expect" -- "$GODOT" --headless --path . --fixed-fps 60 --quit-after 600 -- "$@" || FAILED=1
+          }
+          run main_menu   "Screen -> main_menu"
+          for s in gravity_test look_test playground customize settings host_join tests; do
+            run "$s" "Screen -> $s" "--screen=$s"
+          done
+          for l in hub bathroom cafeteria waterworks spincycle reactor workshop; do
+            run "level_$l" "Level built" "--level=$l"
+          done
+          exit $FAILED
+
+      - name: Physics soak test (4 plumbers, random gravity, 2 min simulated)
+        run: >
+          python3 tools/ci/run_godot.py --name "physics soak test" --log ci_logs/soak.log --timeout 1200
+          --expect "Soak test PASSED" --
+          "$GODOT" --headless --path . --fixed-fps 60 -- --soak
+
+      - name: Rendered smoke tests (real OpenGL via Mesa, compiles shaders, screenshots)
+        run: |
+          set -uo pipefail
+          sudo apt-get update -qq && sudo apt-get install -y -qq xvfb libgl1-mesa-dri libglx-mesa0 > /dev/null
+          mkdir -p ci_screens
+          FAILED=0
+          shot() {  # name, user args...
+            local name="$1"; shift
+            xvfb-run -a -s "-screen 0 1920x1080x24" python3 tools/ci/run_godot.py --name "render: $name" \
+              --log "ci_logs/render_${name}.log" --timeout 600 --expect "CI screenshot saved" -- \
+              "$GODOT" --path . --rendering-driver opengl3 --fixed-fps 60 --quit-after 420 -- \
+              "--ci-screenshot=$PWD/ci_screens/$name.png" --ci-frames=360 "$@" || FAILED=1
+          }
+          shot main_menu
+          shot look_test --screen=look_test
+          shot bathroom --level=bathroom
+          shot reactor --level=reactor
+          exit $FAILED
+
+      # -------------------------------------------------------------- export
+      - name: Export Android debug APK
+        run: |
+          mkdir -p build
+          python3 tools/ci/run_godot.py --name "Android export" --log ci_logs/export.log --timeout 900 -- \
+            "$GODOT" --headless --path . --export-debug "Android" "build/${APK_NAME}"
+
+      - name: Verify APK (signature, arm64, package, permissions, landscape)
+        run: bash tools/ci/verify_apk.sh "build/${APK_NAME}"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APK_NAME }}
+          path: build/${{ env.APK_NAME }}
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-screenshots
+          path: ci_screens/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-logs
+          path: |
+            ci_logs/
+            ~/.local/share/godot/app_userdata/Gravity Plumbers/logs/
+          if-no-files-found: ignore
+          retention-days: 14

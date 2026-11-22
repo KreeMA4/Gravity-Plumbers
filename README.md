@@ -101,6 +101,39 @@ overlay and F4 cycles gravity (only in debug rooms). Gamepads work too.
 6. Open the APK from the Files app to install it. Android will ask you to allow installs from
    the Godot app or the Files app.
 
+## 4b. Download a ready-made APK from GitHub (easiest)
+
+GitHub builds a **debug APK** automatically. It runs every time code changes on the
+development branch, and you can also start a build by hand. Each build first imports the
+project in Godot 4.6, runs the logic tests, boots every screen and level, runs the physics
+soak test, and checks the APK. It only uploads an APK when all of those steps pass.
+
+**Download on your Android phone:**
+1. Open the repository in your phone's browser (Chrome or Samsung Internet) and **sign in to
+   GitHub**. Artifacts can only be downloaded while you're signed in. Tip: tap ⋮ →
+   **Desktop site** if the mobile page hides things.
+2. Tap the **Actions** tab, then the **Android APK** workflow on the left.
+3. Tap the newest run with a green ✓.
+4. Scroll down to **Artifacts** and tap **GravityPlumbers-Android-Debug.apk**. GitHub
+   downloads it as a **.zip** file.
+5. Open the **Files** app → **Downloads**, tap the zip, and choose **Extract**. Inside is
+   `GravityPlumbers-Android-Debug.apk`.
+6. Tap the APK. Android asks to allow installs from Files (or your browser): tap
+   **Settings → Allow from this source**, go back, and tap **Install**.
+   * If Play Protect warns about an unknown app, tap **More details → Install anyway**. This is
+     expected for debug builds, which are signed with a throwaway key.
+   * If you installed an older build that was signed with a different key, uninstall it first.
+
+**Start a new build by hand:** Actions → **Android APK** → **Run workflow** (on a phone, use
+Desktop site), pick the branch, then tap **Run workflow**. A build takes about 10-20 minutes.
+
+**If a build fails (red ✗):** open the run. The summary at the top lists each check with
+PASS/FAIL and the exact error lines. The **ci-logs** artifact has full logs, and
+**ci-screenshots** has real rendered frames of the menu and some levels.
+
+The pipeline lives in `.github/workflows/android-apk.yml` and `tools/ci/`. Signing keys are
+generated fresh in each build and are never stored in the repository.
+
 ## 5. Play together (LAN and hotspot)
 
 All phones must be on the **same Wi-Fi**, or connected to the **host phone's hotspot**.
