@@ -22,19 +22,25 @@
 - M9: Level 2 Zero-G Cafeteria (zero-G dining zone, floating food and canisters, G-Wrench intro, two-player valve, plunger anchoring), Level 3 Asteroid Waterworks (two planetoids with sphere gravity, pipes wrapped round the rock, a zero-G gap with a bridge-pipe puzzle), Level 4 Spin-Cycle Habitat (scheduled gravity cycle floor→wall→ceiling→wall, jobs on every wall, relay switch), Level 5 Reactor Plumbing Panic (3 rooms, storms every 40 s, two coordinated room switches that turn on and aim the reactor field, vents, and THE GREAT CLOG boss fed with goo), Spinner decorations, difficulty scaling, and mid-level join.
 - M10: synthesized audio (`tools/make_audio.py`: 33 SFX plus 3 seamless music loops, with the storm layer crossfading), blip voice for the dispatcher and plumbers (screams when flung), footsteps, landing dust, jump rings, hit-stop, a full Settings screen (graphics, comfort, sound, controls, misc, recent log), blob shadows, a static-mesh batching pass for the draw-call budget, interpolation-safe decorative animation, the physics soak test (`godot -- --soak`, exit code), every UI string collected in `assets/lang/strings.csv`, and final docs.
 
-## VERIFIED by Godot 4.6 in GitHub Actions (run #11, all green)
+## VERIFIED by Godot 4.6 in GitHub Actions (run #17, all green)
 These checks run on every push and every manual build. See `.github/workflows/android-apk.yml`.
 - Headless project import: no errors.
-- **37/37 logic tests pass** (gravity, work orders, room codes, network codecs, looks, save migration).
+- **42/42 logic tests pass** (now including the joystick maths: 8 directions, deadzone and analog, on-screen at 7 aspect ratios with notch padding; also gravity, work orders, room codes, network codecs, looks, save migration).
 - **Every screen and all 7 levels boot** and run 10 s of simulated time with zero script or engine errors: main menu, gravity test, look test, playground, customize, settings, host/join, tests, hub, levels 1-5 and the workshop.
 - **Physics soak test passes:** 4 bot plumbers, 30 crates and 40 goo blobs, with random gravity flips for 2 minutes of simulated time. No NaN and nothing escaping.
 - **Real OpenGL rendering** (Compatibility renderer through Mesa): every shader compiles. Screenshots of the main menu, the look test, Level 1 and Level 5 are in the `ci-screenshots` artifact.
+- **Touch input end-to-end (144 checks):** real touch events injected into the playground.
+  - The movement joystick is visible, bottom-left, fully on screen and clear of every button. Checked in the default window and at 16:9, 19.5:9 (S25 Ultra), 20:9, 21:9, 18:9 and 4:3.
+  - All 8 stick directions move the plumber at least 2.7 m, within 1 degree of the camera-relative direction.
+  - Analog half and full deflection, re-centre under the thumb, and return home all work.
+  - Camera drag, the Jump button, and multi-touch (move + Grab + Jump) all work. WASD keys still work.
 - **Android export**, with these APK checks passing: signed (debug key), package `org.gravityplumbers.game`, minSdk 24 / targetSdk 35, arm64-v8a, launcher activity, landscape orientation, and all 5 permissions.
 
 Bugs that CI found and that are now fixed:
 - Mesh batching called an API that doesn't exist in GDScript.
 - The sky shader parameter was read while still null.
 - Static resource caches and audio playbacks were left over at quit; the game now shuts down cleanly.
+- **Joystick missing on Android:** the touch layer had zero size, because `set_anchors_preset` was called on a node already in the tree. It now uses `set_anchors_and_offsets_preset`, and the stick is always visible.
 - `get_meta(key, null)` printed an error on every grab or bonk of a non-plumber body. The validator now rejects that pattern.
 
 ## UNVERIFIED (needs a real phone)
