@@ -156,7 +156,7 @@ jobs:
 
       - name: Physics soak test (4 plumbers, random gravity, 2 min simulated)
         run: >
-          python3 tools/ci/run_godot.py --quiet --name "physics soak test" --log ci_logs/soak.log --timeout 1200
+          python3 tools/ci/run_godot.py --quiet --show "Soak" --name "physics soak test" --log ci_logs/soak.log --timeout 1200
           --expect "Soak test PASSED" --
           "$GODOT" --headless --verbose --path . --fixed-fps 60 -- --soak
 
@@ -185,7 +185,7 @@ jobs:
         # joystick visible + on screen at several resolutions, plumber moves in all 8 directions
         # relative to the camera, analog, no conflict with look/Jump/Grab, keyboard still works.
         run: >
-          xvfb-run -a -s "-screen 0 2560x1440x24" python3 tools/ci/run_godot.py --quiet --name "touch input e2e"
+          xvfb-run -a -s "-screen 0 2560x1440x24" python3 tools/ci/run_godot.py --quiet --show "^  (ok|FAIL|shot)|TOUCH E2E" --name "touch input e2e"
           --log ci_logs/touch_e2e.log --timeout 600 --expect "TOUCH E2E PASSED" --
           "$GODOT" --verbose --path . --rendering-driver opengl3 --audio-driver Dummy --fixed-fps 60
           -s res://tests/touch_e2e_test.gd -- --shots=$PWD/ci_screens

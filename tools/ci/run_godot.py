@@ -54,6 +54,7 @@ def main():
     ap.add_argument("--expect", action="append", default=[])
     ap.add_argument("--allow", action="append", default=[])
     ap.add_argument("--quiet", action="store_true", help="don't echo Godot output (it's still in --log)")
+    ap.add_argument("--show", action="append", default=[], help="in --quiet mode, still print lines matching this regex")
     ap.add_argument("cmd", nargs=argparse.REMAINDER)
     a = ap.parse_args()
     cmd = a.cmd[1:] if a.cmd and a.cmd[0] == "--" else a.cmd
@@ -67,7 +68,7 @@ def main():
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors="replace")
         try:
             for line in proc.stdout:
-                if not a.quiet:
+                if not a.quiet or any(re.search(x, line) for x in a.show):
                     sys.stdout.write(line)
                 logf.write(line)
                 lines.append(line.rstrip("\n"))

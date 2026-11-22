@@ -20,9 +20,18 @@ var _label: Label
 var _done: bool = false
 var _pool: GooPool
 var _cam: OrbitCamera
+var _seed: int = 0
+var _reported: int = 0   ## how many problem bodies were described in the log
 
 
 func _ready() -> void:
+	# Random but reproducible: the seed is logged, and --soak-seed=N replays a run.
+	_seed = randi()
+	for a: String in OS.get_cmdline_user_args():
+		if a.begins_with("--soak-seed="):
+			_seed = a.substr(12).to_int()
+	seed(_seed)
+	GameLog.info("Soak test seed %d" % _seed)
 	GravityManager.reset_all()
 	LevelBounds.set_bounds(Vector3(0, 6, 0), 30.0)
 	Geo.basic_environment(self)
@@ -83,8 +92,10 @@ func _physics_process(dt: float) -> void:
 				continue
 			if not rb.global_position.is_finite() or not rb.linear_velocity.is_finite() or not rb.angular_velocity.is_finite():
 				_nan_count += 1
+				_report("NaN", rb)
 			elif rb.global_position.distance_to(LevelBounds.center) > LevelBounds.radius:
 				_oob_count += 1
+				_report("out of bounds", rb)
 	if _t >= DURATION:
 		_finish()
 
@@ -98,11 +109,24 @@ func _process(_delta: float) -> void:
 			_phys_sum / float(maxi(1, _ticks)), _phys_max, int(Performance.get_monitor(Performance.PHYSICS_3D_ACTIVE_OBJECTS))]
 
 
+## Describe the first few problem bodies so a failure can be diagnosed from the log.
+func _report(kind: String, rb: RigidBody3D) -> void:
+	if _reported >= 12:
+		return
+	_reported += 1
+	var groups: PackedStringArray = PackedStringArray()
+	for g: StringName in rb.get_groups():
+		if not str(g).begins_with("_"):
+			groups.append(str(g))
+	GameLog.info("Soak problem: %s at t=%.2fs body=%s groups=%s pos=%s vel=%s gravity=%s" % [kind, _t, rb.name,
+		",".join(groups), str(rb.global_position), str(rb.linear_velocity), str(GravityManager.global_dir)])
+
+
 func _finish() -> void:
 	_done = true
 	var ok: bool = _nan_count == 0 and _oob_count == 0
-	var summary: String = "Soak test %s: NaN %d, out-of-bounds %d, avg FPS %.1f, physics avg %.2f ms max %.2f ms" % [
-		"PASSED" if ok else "FAILED", _nan_count, _oob_count, _fps_sum / float(maxi(1, _frames)),
+	var summary: String = "Soak test (seed %d) %s: NaN %d, out-of-bounds %d, avg FPS %.1f, physics avg %.2f ms max %.2f ms" % [
+		_seed, "PASSED" if ok else "FAILED", _nan_count, _oob_count, _fps_sum / float(maxi(1, _frames)),
 		_phys_sum / float(maxi(1, _ticks)), _phys_max]
 	GameLog.info(summary)
 	if _label != null:
