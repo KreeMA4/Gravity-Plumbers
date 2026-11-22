@@ -89,7 +89,7 @@ func _ready() -> void:
 	dbg_overlay.custom_minimum_size = Vector2(320, 96)
 	dbg_overlay.pressed.connect(_toggle_overlay)
 	_debug_box.add_child(dbg_overlay)
-	var ver: Label = UITheme.label("v%s  %s   ducks: %d" % [Tuning.GAME_VERSION, Tuning.MILESTONE_ID, SaveData.duck_count()], 22)
+	var ver: Label = UITheme.label("v%s  %s   ducks: %d\n%s" % [Tuning.GAME_VERSION, Tuning.MILESTONE_ID, SaveData.duck_count(), BuildInfo.LABEL], 22)
 	ver.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	right.add_child(ver)
 

@@ -71,6 +71,6 @@ func _process(delta: float) -> void:
 		NetManager.bytes_up_per_sec / 1024.0, NetManager.bytes_down_per_sec / 1024.0])
 	lines.append("Quality %s  scale %.2f  %s" % [Quality.preset_name, Quality.render_scale,
 		RenderingServer.get_video_adapter_name()])
-	lines.append("Build %s  %s  Godot %s" % [Tuning.GAME_VERSION, Tuning.MILESTONE_ID,
+	lines.append("Build %s  %s  %s  Godot %s" % [Tuning.GAME_VERSION, Tuning.MILESTONE_ID, BuildInfo.LABEL,
 		Engine.get_version_info().get("string", "?")])
 	_label.text = "\n".join(lines)

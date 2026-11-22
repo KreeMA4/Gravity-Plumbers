@@ -1,7 +1,10 @@
 # Builds an installable DEBUG APK of Gravity Plumbers with Godot 4.6.
 # Order: static checks -> Godot import -> logic tests -> smoke tests (headless
 # + real OpenGL rendering) -> physics soak test -> Android export -> APK
-# verification -> upload. Any failing step stops the pipeline.
+# verification -> upload -> re-download and check the artifact. Any failing step
+# stops the pipeline. Every APK carries this run's number: in its file name
+# (GravityPlumbers-Android-Debug-RunN.apk), its Android versionName (x.y.z-runN),
+# its versionCode (N) and on the game's main menu ("CI run N (commit)").
 # Debug signing keys are generated fresh on every run and never committed.
 name: Android APK
 
@@ -27,7 +30,8 @@ permissions:
 env:
   GODOT_VERSION: "4.6"
   GODOT_STATUS: "stable"
-  APK_NAME: GravityPlumbers-Android-Debug.apk
+  BUILD_RUN: ${{ github.run_number }}
+  APK_NAME: GravityPlumbers-Android-Debug-Run${{ github.run_number }}.apk
 
 jobs:
   build-android:
@@ -116,6 +120,16 @@ jobs:
           done
           cat ~/.config/godot/editor_settings-${GODOT_VERSION}.tres
 
+      # ---------------------------------------------------------- build stamp
+      - name: Stamp this run into the build (run ${{ github.run_number }})
+        id: stamp
+        # Before any test, so every check below runs on exactly what gets exported.
+        run: |
+          set -euo pipefail
+          python3 tools/ci/stamp_build.py "$BUILD_RUN" "$GITHUB_SHA" | tee -a "$GITHUB_OUTPUT"
+          cat scripts/core/build_info.gd
+          grep -E "^version/(code|name)=" export_presets.cfg
+
       # --------------------------------------------------------- static checks
       - name: Static checks (project validator + full GDScript parse)
         run: |
@@ -145,7 +159,10 @@ jobs:
             python3 tools/ci/run_godot.py --quiet --name "smoke: $name" --log "ci_logs/smoke_${name}.log" --timeout 300 \
               --expect "$expect" -- "$GODOT" --headless --verbose --path . --fixed-fps 60 --quit-after 5000 -- --ci-quit-frames=600 "$@" || FAILED=1
           }
-          run main_menu   "Screen -> main_menu"
+          # The main menu boot must also log this run's build stamp.
+          python3 tools/ci/run_godot.py --quiet --show "starting on" --name "smoke: main_menu" --log ci_logs/smoke_main_menu.log --timeout 300 \
+            --expect "Screen -> main_menu" --expect "\\[CI run ${BUILD_RUN} \\(" -- \
+            "$GODOT" --headless --verbose --path . --fixed-fps 60 --quit-after 5000 -- --ci-quit-frames=600 || FAILED=1
           for s in gravity_test look_test playground customize settings host_join tests; do
             run "$s" "Screen -> $s" "--screen=$s"
           done
@@ -191,22 +208,102 @@ jobs:
           -s res://tests/touch_e2e_test.gd -- --shots=$PWD/ci_screens
 
       # -------------------------------------------------------------- export
-      - name: Export Android debug APK
+      - name: Export Android debug APK (fresh, this run only)
         run: |
-          mkdir -p build
+          set -euo pipefail
+          # Start from an empty build/ so no older APK can be picked up, and prove the
+          # file was written by this export (newer than a marker made just before it).
+          rm -rf build && mkdir -p build
+          test -z "$(ls -A build)"
+          touch "$RUNNER_TEMP/export_start"
+          sleep 1
           python3 tools/ci/run_godot.py --name "Android export" --log ci_logs/export.log --timeout 900 -- \
             "$GODOT" --headless --path . --export-debug "Android" "build/${APK_NAME}"
+          test -s "build/${APK_NAME}" || { echo "export produced no APK"; exit 1; }
+          [ "build/${APK_NAME}" -nt "$RUNNER_TEMP/export_start" ] || { echo "APK is older than this export"; exit 1; }
+          [ "$(ls build/*.apk | wc -l)" -eq 1 ] || { echo "more than one APK in build/: $(ls build)"; exit 1; }
+          ls -la --time-style=full-iso build
 
-      - name: Verify APK (signature, arm64, package, permissions, landscape)
+      - name: Verify APK (signature, arm64, package, permissions, landscape, this run's version)
+        env:
+          EXPECT_VERSION_CODE: ${{ steps.stamp.outputs.version_code }}
+          EXPECT_VERSION_NAME: ${{ steps.stamp.outputs.version_name }}
         run: bash tools/ci/verify_apk.sh "build/${APK_NAME}"
 
+      - name: Checksum + build info
+        id: sum
+        run: |
+          set -euo pipefail
+          cd build
+          SHA=$(sha256sum "${APK_NAME}" | cut -d" " -f1)
+          sha256sum "${APK_NAME}" > "${APK_NAME}.sha256"
+          {
+            echo "Gravity Plumbers debug APK"
+            echo "file:          ${APK_NAME}"
+            echo "sha256:        ${SHA}"
+            echo "size_bytes:    $(stat -c %s "${APK_NAME}")"
+            echo "versionName:   ${{ steps.stamp.outputs.version_name }}"
+            echo "versionCode:   ${{ steps.stamp.outputs.version_code }}"
+            echo "in-game label: ${{ steps.stamp.outputs.label }}"
+            echo "run:           #${BUILD_RUN} (attempt ${GITHUB_RUN_ATTEMPT}) ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            echo "commit:        ${GITHUB_SHA}"
+            echo "branch:        ${GITHUB_REF_NAME}"
+            echo "built_utc:     $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          } > BUILD_INFO.txt
+          cat BUILD_INFO.txt
+          echo "sha256=${SHA}" >> "$GITHUB_OUTPUT"
+          echo "::notice title=APK SHA-256 (run ${BUILD_RUN})::${APK_NAME} ${SHA}"
+
       - name: Upload APK
+        id: upload
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.APK_NAME }}
-          path: build/${{ env.APK_NAME }}
+          path: |
+            build/${{ env.APK_NAME }}
+            build/${{ env.APK_NAME }}.sha256
+            build/BUILD_INFO.txt
           if-no-files-found: error
           retention-days: 30
+
+      - name: Re-download the artifact and check its contents
+        # Proves what a phone will download is exactly this run's APK.
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.APK_NAME }}
+          path: ${{ runner.temp }}/artifact-check
+
+      - name: Verify artifact contents + report SHA-256
+        env:
+          EXPECT_SHA: ${{ steps.sum.outputs.sha256 }}
+          EXPECT_VERSION_CODE: ${{ steps.stamp.outputs.version_code }}
+          EXPECT_VERSION_NAME: ${{ steps.stamp.outputs.version_name }}
+          ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
+          ARTIFACT_ZIP_SHA: ${{ steps.upload.outputs.artifact-digest }}
+        run: |
+          set -euo pipefail
+          D="$RUNNER_TEMP/artifact-check"
+          ls -la "$D"
+          # Exactly: the APK, its .sha256 and BUILD_INFO.txt; exactly one APK, named for this run.
+          [ "$(ls "$D" | sort | tr '\n' ' ')" = "$(printf '%s\n' "${APK_NAME}" "${APK_NAME}.sha256" BUILD_INFO.txt | sort | tr '\n' ' ')" ] \
+            || { echo "artifact contents are not what was uploaded: $(ls "$D")"; exit 1; }
+          [ "$(ls "$D"/*.apk | wc -l)" -eq 1 ]
+          GOT=$(sha256sum "$D/${APK_NAME}" | cut -d" " -f1)
+          [ "$GOT" = "$EXPECT_SHA" ] || { echo "downloaded APK sha256 $GOT != built $EXPECT_SHA"; exit 1; }
+          (cd "$D" && sha256sum -c "${APK_NAME}.sha256")
+          grep -q "$EXPECT_SHA" "$D/BUILD_INFO.txt"
+          BT="$(ls -d "$ANDROID_SDK_ROOT"/build-tools/* | sort -V | tail -n 1)"
+          "$BT/aapt" dump badging "$D/${APK_NAME}" | grep -q "versionCode='${EXPECT_VERSION_CODE}' versionName='${EXPECT_VERSION_NAME}'" \
+            || { echo "downloaded APK is not this run's version"; exit 1; }
+          {
+            echo "### APK for run #${BUILD_RUN}"
+            echo "- Artifact: [\`${APK_NAME}\`](${ARTIFACT_URL}) (contains the APK, \`${APK_NAME}.sha256\`, \`BUILD_INFO.txt\`)"
+            echo "- APK SHA-256: \`${GOT}\`"
+            echo "- Artifact zip digest: \`${ARTIFACT_ZIP_SHA}\`"
+            echo "- Android versionName \`${EXPECT_VERSION_NAME}\`, versionCode \`${EXPECT_VERSION_CODE}\`; main menu shows \`${{ steps.stamp.outputs.label }}\`"
+            echo "- Re-downloaded and checked: contents, SHA-256 and version all match this run."
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "ARTIFACT OK: ${APK_NAME} sha256=${GOT}"
 
       - name: Upload screenshots
         if: always()

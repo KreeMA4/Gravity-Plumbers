@@ -38,7 +38,7 @@ var _current: Node = null
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	InputSetup.register_all()
-	GameLog.info("Gravity Plumbers %s (%s) starting on %s" % [Tuning.GAME_VERSION, Tuning.MILESTONE_ID, OS.get_name()])
+	GameLog.info("Gravity Plumbers %s (%s) [%s] starting on %s" % [Tuning.GAME_VERSION, Tuning.MILESTONE_ID, BuildInfo.LABEL, OS.get_name()])
 
 
 ## Called by scenes/main.gd when the main scene is ready.

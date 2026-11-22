@@ -114,15 +114,20 @@ soak test, and checks the APK. It only uploads an APK when all of those steps pa
    **Desktop site** if the mobile page hides things.
 2. Tap the **Actions** tab, then the **Android APK** workflow on the left.
 3. Tap the newest run with a green ✓.
-4. Scroll down to **Artifacts** and tap **GravityPlumbers-Android-Debug.apk**. GitHub
-   downloads it as a **.zip** file.
-5. Open the **Files** app → **Downloads**, tap the zip, and choose **Extract**. Inside is
-   `GravityPlumbers-Android-Debug.apk`.
+4. Scroll down to **Artifacts** and tap **GravityPlumbers-Android-Debug-Run<N>.apk**, where
+   `<N>` is the run number shown at the top of the run page (e.g. `#18`). GitHub downloads it
+   as a **.zip** file.
+5. Open the **Files** app → **Downloads**, tap the zip, and choose **Extract**. Inside are
+   `GravityPlumbers-Android-Debug-Run<N>.apk`, its `.sha256` checksum, and `BUILD_INFO.txt`
+   (run, commit, version and SHA-256).
 6. Tap the APK. Android asks to allow installs from Files (or your browser): tap
    **Settings → Allow from this source**, go back, and tap **Install**.
    * If Play Protect warns about an unknown app, tap **More details → Install anyway**. This is
      expected for debug builds, which are signed with a throwaway key.
    * If you installed an older build that was signed with a different key, uninstall it first.
+7. **Check which build you have.** The main menu's bottom-right corner shows `CI run <N> (commit)`.
+   Android **Settings → Apps → Gravity Plumbers** shows version `0.10.0-run<N>`. Each run's SHA-256
+   is in the run's summary page and in `BUILD_INFO.txt`.
 
 **Start a new build by hand:** Actions → **Android APK** → **Run workflow** (on a phone, use
 Desktop site), pick the branch, then tap **Run workflow**. A build takes about 10-20 minutes.

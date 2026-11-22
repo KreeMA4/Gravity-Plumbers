@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Verify an exported APK is really installable: signed, arm64, right package,
 # required permissions present, landscape orientation. Fails loudly otherwise.
-# Usage: tools/ci/verify_apk.sh path/to/app.apk
+# Usage: [EXPECT_VERSION_CODE=N EXPECT_VERSION_NAME=x] tools/ci/verify_apk.sh path/to/app.apk
 set -euo pipefail
 APK="$1"
 BT="$(ls -d "$ANDROID_SDK_ROOT"/build-tools/* | sort -V | tail -n 1)"
@@ -21,6 +21,12 @@ echo "== aapt badging"
 "$AAPT" dump badging "$APK" | tee /tmp/badging.txt
 grep -q "package: name='org.gravityplumbers.game'" /tmp/badging.txt || fail "wrong package name"
 grep -q "native-code: 'arm64-v8a'" /tmp/badging.txt || fail "no arm64-v8a native code (needed for the Galaxy S25 Ultra)"
+# This run's stamp (tools/ci/stamp_build.py) must be in the APK, proving it was built by this run.
+if [ -n "${EXPECT_VERSION_CODE:-}" ]; then
+  grep -q "versionCode='${EXPECT_VERSION_CODE}' versionName='${EXPECT_VERSION_NAME}'" /tmp/badging.txt \
+    || fail "APK version is not this run's (want versionCode=${EXPECT_VERSION_CODE} versionName=${EXPECT_VERSION_NAME}): $(grep -o "versionCode='[^']*' versionName='[^']*'" /tmp/badging.txt)"
+  echo "version stamp OK: versionCode=${EXPECT_VERSION_CODE} versionName=${EXPECT_VERSION_NAME}"
+fi
 for p in INTERNET ACCESS_NETWORK_STATE ACCESS_WIFI_STATE CHANGE_WIFI_MULTICAST_STATE VIBRATE; do
   grep -q "uses-permission: name='android.permission.$p'" /tmp/badging.txt || fail "missing permission $p"
 done
