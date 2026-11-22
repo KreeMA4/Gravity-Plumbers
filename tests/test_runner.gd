@@ -10,6 +10,7 @@ const TEST_FILES: Array = [
 	"res://tests/work_order_test.gd",
 	"res://tests/room_code_test.gd",
 	"res://tests/net_codec_test.gd",
+	"res://tests/look_test.gd",
 ]
 
 

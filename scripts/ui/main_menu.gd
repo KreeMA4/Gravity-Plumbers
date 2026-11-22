@@ -124,6 +124,7 @@ func _toggle_overlay() -> void:
 
 
 func _on_solo() -> void:
+	NetManager.maybe_random_look()
 	NetManager.start_solo()
 	GameState.start_level("hub")
 

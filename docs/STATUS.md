@@ -1,6 +1,6 @@
 # Status
 
-**Current milestone:** M7 (networking)
+**Current milestone:** M8 (customisation)
 
 ## Done
 - project.godot: Jolt Physics, Compatibility renderer, gravity 0, 60 Hz physics, physics interpolation, landscape, touch emulated from the mouse.
@@ -18,12 +18,14 @@
 - M5: WorkOrder and WorkOrderManager (ordered and parallel orders, early targets, net state; unit tested), SludgeMeter (unit tested; solo can't hard-fail), Leak (spray, tape sealing, goo spitting), Valve (wrench turning, two-player valves that turn at half speed solo), Clog (plunger hits, pop burst), Tank (goo blobs and canisters), PipeSegment plus PipePort (snap radius and angle, locks in), GravitySwitch (global, field or field direction actions; two-player; relay "required_dir"), Vent hazard (telegraphed PUSH burst), GoldenDuck, GooCanister, a GooPool of 60 pooled blobs, KillVolume, LevelCatalog, LevelSpawner (data-driven), LevelRunner (rules, storms, dispatcher lines, flush penalty, all-flushed grace, win/fail, awards), the HUD (sludge bar, timer, checklist, toasts, shift warning with an edge pulse, teammate pointers), the pause menu, the level select console, the results screen, and the Plumbing Workshop test level.
 - M6: the hub (The Rusty Pipe: job console with difficulty and stars, tool rack, practice switch and rail, a duck), Level 1 Orbital Bathroom (6 ordered work orders built around one 180° flip; tutorial prompts; ceiling spawn pad used after the flip), and saving stars, best times and ducks to user://save.json.
 - M7: NetManager (ENet host/join, version handshake, player list with looks, ready, kick, lobby info, mid-level join with catch-up sync, disconnect handling, ping, ENet traffic stats, rate-limited validated input, 20 Hz snapshots with priority and a byte budget, client interpolation and extrapolation, 5 Hz level state, reliable events, results relay, host-paused notice, fake remote bot through simulated lag and loss, `--server` / `--client=` flags), RoomCode (Crockford base32, forgiving decode; tested), LanDiscovery (UDP beacons with graceful failure), UpnpHelper (worker thread), NetUtil (private IP picking, hotspot-aware), SnapshotSync (tested), the Host/Join screen (LAN list, code, advanced IP, hotspot help, connecting overlay with cancel) and the Lobby screen (code with copy, IPs, UPnP status, player list with 3D previews, ready, kick, level and difficulty, test tools).
+- M8: the customise screen (8 category tabs, a SubViewport turntable preview with drag-spin and reaction hop, an option grid with colour swatches and locked items, a randomizer with per-category locks plus colours-only and undo, 3 outfit slots, name edit, Done), the hub mirror, your plumber idling in the menu backdrop, live outfits in the lobby, "Random on join", host-side look clamping, and look/randomizer unit tests.
 
 ## UNVERIFIED
 **No Godot binary was run in the build environment** (running the downloaded editor was blocked). Everything below passed static checks only (`gdtoolkit` parse and `tools/validate_project.py`):
 - That the project opens in Godot 4.6 with zero errors and zero warnings.
 - That `tests/run_all.gd` passes.
 - That the menu renders correctly at 1920x1080 and 2400x1080.
+- M8: SubViewport preview sizing in the Compatibility renderer; how comfortable "hold to save" outfit slots are to use.
 - M7: everything over a real network: LAN broadcast on Android (multicast lock), hotspot routing, UPnP on real routers, and how interpolation feels at 20 Hz. ENet statistics may report 0 on some platforms.
 - M6: whether Level 1's ceiling leak and valve are comfortable to reach while standing upside down (they may need moving a little lower in `orbital_bathroom.gd`).
 - M5: Area3D tank counting with pooled blobs re-enabled through process_mode; PUSH vent strength; the HUD layout on 21:9 screens.

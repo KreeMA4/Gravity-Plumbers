@@ -94,3 +94,15 @@ You need 2 phones on the same Wi-Fi, or 1 phone and the test bot.
 - [ ] **One phone:** in the lobby tap "+ Test bot", set Lag 250ms / Loss 5%, and Start. A bot plumber wanders around the level.
 - [ ] Debug overlay (three-finger tap): ping and KB/s are shown, with under about 40 KB/s down on the client.
 - [ ] Mid-level join: start a level, then join from phone 2. They appear at a spawn pad.
+
+## M8: Customisation
+- [ ] The main menu background shows YOUR plumber idling (bobbing, looking around) in front of the window.
+- [ ] Main menu → **Customize**: category tabs on the left, a spinning 3D preview in the middle (drag to spin it), and options on the right.
+- [ ] Tapping an option changes the preview immediately, with a little hop and squash.
+- [ ] Every category has at least 6 variants. Locked items say "LOCKED / N ducks".
+- [ ] **RANDOMIZE!** shakes the button and rerolls everything. **lock** a category (it turns to LOCK) and randomize again: that category stays the same. **Colours only** changes only colours. **Undo** steps back.
+- [ ] **Outfit 1-3:** hold one for about 1 second to save into it, tap it to wear it.
+- [ ] **Done** saves. Restart the game: your look is still there.
+- [ ] In the hub, USE on the **MIRROR** opens the same screen as an overlay.
+- [ ] Online: change your outfit in the lobby (Customise): the other phone's 3D lobby preview updates.
+- [ ] In a level, other plumbers wear their chosen outfits.

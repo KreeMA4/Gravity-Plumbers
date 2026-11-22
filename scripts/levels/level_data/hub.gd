@@ -54,10 +54,11 @@ static func data() -> Dictionary:
 		"switches": [{"id": "hub_switch", "pos": Vector3(7.75, 1.4, 4.6), "normal": Vector3.LEFT, "dirs": [1, 0]}],
 		"stations": [
 			{"id": "console", "kind": "console", "pos": Vector3(0, 0, -4.5), "normal": Vector3.BACK},
+			{"id": "mirror", "kind": "mirror", "pos": Vector3(-4.5, 0, -5.4), "normal": Vector3.BACK},
 		],
 		"ducks": [{"id": "hub_1", "pos": Vector3(0, 5.4, 0)}],
 		"dispatcher": {
-			"start": "Welcome aboard The Rusty Pipe! Use the JOB CONSOLE to pick a job. Tools are on the rack.",
+			"start": "Welcome aboard The Rusty Pipe! JOB CONSOLE picks a job, the MIRROR changes your look. Tools are on the rack.",
 			"storm": ["Practice flip! Grab that rail!"],
 		},
 		"tutorial": [

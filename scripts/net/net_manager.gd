@@ -147,6 +147,19 @@ func _my_look() -> PackedByteArray:
 	return b
 
 
+## Settings > "Random on join": a fresh random outfit every match.
+func maybe_random_look() -> void:
+	if not SaveData.setting_b("random_on_join"):
+		return
+	var b: PackedByteArray = SaveData.get_look_bytes()
+	var look: PlumberLook = PlumberLook.from_bytes(b) if b.size() >= 2 else PlumberLook.default_for(0)
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.randomize()
+	look.randomize_look(rng, [], SaveData.duck_count())
+	SaveData.set_look_bytes(look.to_bytes())
+	SaveData.save()
+
+
 func _reset_players_solo() -> void:
 	players.clear()
 	players[1] = {"name": _my_name(), "look": _my_look(), "ready": true, "index": 0, "fake": false}
@@ -199,6 +212,7 @@ func update_my_info() -> void:
 
 func host_game(new_room_name: String, new_port: int) -> Error:
 	_close_network()
+	maybe_random_look()
 	port = clampi(new_port, 1024, 65535)
 	var err: Error = _transport.create_server(port, maxi(1, Tuning.MAX_PLAYERS - 1))
 	if err != OK:
@@ -340,6 +354,7 @@ func _remove_player(peer_id: int) -> void:
 
 func join_game(ip: String, join_port: int) -> Error:
 	_close_network()
+	maybe_random_look()
 	var err: Error = _transport.create_client(ip, clampi(join_port, 1, 65535))
 	if err != OK:
 		connection_changed.emit("failed", "Couldn't start connecting (error %d)." % err)
