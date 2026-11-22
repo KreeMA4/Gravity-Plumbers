@@ -1,0 +1,13 @@
+# Godot cache and build outputs
+.godot/
+build/
+*.apk
+*.aab
+*.tmp
+# Python
+__pycache__/
+*.pyc
+# Keystores / secrets must never be committed
+*.keystore
+*.jks
+export_credentials.cfg
