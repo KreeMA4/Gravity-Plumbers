@@ -24,6 +24,7 @@ var _storm_target: float = 0.0
 var _storm_level: float = 0.0
 var _voice_queue: Array = []        ## pending blips: [time, pitch, volume, pos or null]
 var _voice_time: float = 0.0
+var _quitting: bool = false        ## set by stop_all(): no new sounds while shutting down
 
 
 func _ready() -> void:
@@ -93,6 +94,8 @@ func get_stream(sound_name: String) -> AudioStream:
 
 
 func _rate_ok(sound_name: String) -> bool:
+	if _quitting:
+		return false
 	var now: int = Time.get_ticks_msec()
 	var last: int = int(_last_played.get(sound_name, -100000))
 	if float(now - last) < Tuning.SAME_SOUND_COOLDOWN * 1000.0:
@@ -141,7 +144,7 @@ func play_at(sound_name: String, pos: Vector3, volume_db: float = 0.0, pitch: fl
 
 ## track: "menu", "game" or "" (stop).
 func play_music(track: String) -> void:
-	if track == _music_name:
+	if track == _music_name or _quitting:
 		return
 	_music_name = track
 	_music_a.stop()
@@ -210,6 +213,7 @@ func speak(text: String, base_pitch: float = 1.0, pos: Variant = null) -> void:
 
 ## Stop every sound that is playing (used before quitting).
 func stop_all() -> void:
+	_quitting = true
 	for item: Variant in _pool3d:
 		(item as AudioStreamPlayer3D).stop()
 	for item2: Variant in _pool_ui:
