@@ -19,7 +19,7 @@ func _ready() -> void:
 func _on_body_entered(body: Node3D) -> void:
 	if not multiplayer.is_server():
 		return
-	var p: Variant = body.get_meta("plumber", null)
+	var p: Variant = Plumber.of(body)
 	if p is Plumber:
 		(p as Plumber).flush.call_deferred()
 		return

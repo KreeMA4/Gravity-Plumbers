@@ -52,7 +52,7 @@ func _ready() -> void:
 func _on_body_entered(body: Node3D) -> void:
 	if _taken or not multiplayer.is_server():
 		return
-	if body.get_meta("plumber", null) is Plumber:
+	if Plumber.of(body) is Plumber:
 		_taken = true
 		collected.emit(duck_id)
 

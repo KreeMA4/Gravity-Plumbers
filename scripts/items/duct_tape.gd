@@ -42,7 +42,7 @@ func _use_pressed() -> void:
 	if hit.is_empty():
 		return
 	var col: Object = hit.get("collider")
-	if col is RigidBody3D and not (col is ToolBase) and (col as RigidBody3D).get_meta("plumber", null) == null:
+	if col is RigidBody3D and not (col is ToolBase) and Plumber.of(col) == null:
 		var rb: RigidBody3D = col as RigidBody3D
 		rb.freeze_mode = RigidBody3D.FREEZE_MODE_KINEMATIC
 		rb.freeze = true

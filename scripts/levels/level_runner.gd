@@ -166,7 +166,7 @@ func despawn_plumber(peer_id: int) -> void:
 		for other: Variant in plumbers.values():
 			for gh2: Variant in (other as Plumber).grab_hands.values():
 				var hand: GrabHand = gh2 as GrabHand
-				if hand.target != null and is_instance_valid(hand.target) and hand.target.get_meta("plumber", null) == p:
+				if hand.target != null and is_instance_valid(hand.target) and Plumber.of(hand.target) == p:
 					hand.release()
 		p.queue_free()
 	if hud != null:

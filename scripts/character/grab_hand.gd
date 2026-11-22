@@ -52,7 +52,7 @@ func is_anchored() -> bool:
 		if rb.freeze or rb.mass > Tuning.MAX_CARRY_MASS:
 			return true
 		# Holding a teammate who is themselves braced also counts.
-		var other: Variant = rb.get_meta("plumber", null)
+		var other: Variant = Plumber.of(rb)
 		if other is Plumber and other != plumber:
 			var op: Plumber = other as Plumber
 			for gh: Variant in op.grab_hands.values():
@@ -180,7 +180,7 @@ func _attach(hand: RigidBody3D, other: PhysicsBody3D, at: Vector3) -> void:
 	target = other
 	hold_time = 0.0
 	target_owner = _find_owner(other)
-	var op: Variant = other.get_meta("plumber", null)
+	var op: Variant = Plumber.of(other)
 	if op is Plumber:
 		(op as Plumber).held_by[plumber] = true
 	if target_owner != null and target_owner.has_method("on_grab"):
@@ -206,7 +206,7 @@ func release(throw: bool = false) -> void:
 		joint.queue_free()
 	joint = null
 	if target != null and is_instance_valid(target):
-		var op: Variant = target.get_meta("plumber", null)
+		var op: Variant = Plumber.of(target)
 		if op is Plumber:
 			(op as Plumber).held_by.erase(plumber)
 		if throw and target is RigidBody3D:

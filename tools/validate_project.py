@@ -174,6 +174,7 @@ GODOT3 = [
      "Godot 3 node class name (needs the 3D suffix)"),
     (re.compile(r'\.connect\(\s*"'), "connect(\"signal\", ...) is Godot 3 style; use signal.connect(callable)"),
     (re.compile(r'\bdeg2rad\b|\brad2deg\b|\bstepify\b|\blinear2db\b|\bdb2linear\b'), "renamed in Godot 4"),
+    (re.compile(r'get_meta\([^)]*,\s*null\s*\)'), "get_meta(key, null) prints an error when the key is missing; check has_meta() first"),
 ]
 
 DECL_RE = re.compile(r'^(?:static\s+)?(?:func|var|const|signal|enum|class)\s+([A-Za-z_]\w*)')

@@ -62,7 +62,7 @@ func _use_pressed() -> void:
 		if not (col is RigidBody3D):
 			continue
 		var rb: RigidBody3D = col as RigidBody3D
-		var op: Variant = rb.get_meta("plumber", null)
+		var op: Variant = Plumber.of(rb)
 		var push: Vector3 = (aim_dir() + holder.local_up * 0.4).normalized() * 5.0
 		if op is Plumber:
 			var other: Plumber = op as Plumber

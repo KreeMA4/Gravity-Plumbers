@@ -95,6 +95,14 @@ var _was_grounded: bool = false
 var _exclude: Array[RID] = []
 
 
+## The plumber a physics body belongs to, or null. (Uses has_meta first:
+## get_meta(key, null) prints an error in Godot 4 when the key is missing.)
+static func of(obj: Object) -> Plumber:
+	if obj == null or not is_instance_valid(obj) or not obj.has_meta("plumber"):
+		return null
+	return obj.get_meta("plumber") as Plumber
+
+
 ## Call before add_child().
 func setup(xform: Transform3D, plumber_look: PlumberLook, peer: int, index: int) -> void:
 	spawn_transform = xform

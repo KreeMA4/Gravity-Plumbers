@@ -55,7 +55,7 @@ func _use_pressed() -> void:
 	var applied: bool = false
 	if col is RigidBody3D:
 		var rb: RigidBody3D = col as RigidBody3D
-		var op: Variant = rb.get_meta("plumber", null)
+		var op: Variant = Plumber.of(rb)
 		if op is Plumber:
 			var other: Plumber = op as Plumber
 			for gb: GravityBody in other.gravity_bodies:
