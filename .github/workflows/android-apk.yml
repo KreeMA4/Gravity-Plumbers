@@ -157,7 +157,7 @@ jobs:
       - name: Physics soak test (4 plumbers, random gravity, 2 min simulated)
         run: >
           python3 tools/ci/run_godot.py --quiet --show "Soak" --name "physics soak test" --log ci_logs/soak.log --timeout 1200
-          --expect "Soak test PASSED" --
+          --expect "Soak test .*PASSED" --
           "$GODOT" --headless --verbose --path . --fixed-fps 60 -- --soak
 
       - name: Rendered smoke tests (real OpenGL via Mesa, compiles shaders, screenshots)
