@@ -490,6 +490,10 @@ func leg_report(tag: String) -> void:
 		print("  info  heights[%s] above floor: pelvis %.3f thigh_c %.3f shin_c %.3f sole %.3f | thigh_down %s shin_down %s" % [tag,
 			plumber.pelvis.global_position.dot(up) - floor_h, th.global_position.dot(up) - floor_h, sh.global_position.dot(up) - floor_h,
 			plumber.foot_sole_position("l").dot(up) - floor_h, str((th.global_basis * Vector3.DOWN).snapped(Vector3(0.01, 0.01, 0.01))), str((sh.global_basis * Vector3.DOWN).snapped(Vector3(0.01, 0.01, 0.01)))])
+	print("  info  tilt[%s]: pelvis %.1f deg chest %.1f deg from upright | foot friction L %.2f R %.2f" % [tag,
+		rad_to_deg(plumber.pelvis.global_basis.y.normalized().angle_to(up)), rad_to_deg(plumber.chest.global_basis.y.normalized().angle_to(up)),
+		(plumber.bodies["shin_l"] as RigidBody3D).physics_material_override.friction if plumber.bodies.has("shin_l") else -1.0,
+		(plumber.bodies["shin_r"] as RigidBody3D).physics_material_override.friction if plumber.bodies.has("shin_r") else -1.0])
 	print("  info  legs[%s]: clear L %.3f R %.3f | ground_dist %.3f ride %.3f grounded %s | hipL tgt %.2f act %.2f | kneeL tgt %.2f act %.2f | amt %.2f phase %.2f" % [
 		tag, sole_clearance("l"), sole_clearance("r"), plumber.ground_dist, plumber.gait_ride, str(plumber.grounded),
 		t_hip, joint_angle("thigh_l", "pelvis"), t_knee, joint_angle("shin_l", "thigh_l"), plumber.gait_amount, fposmod(plumber.walk_phase, TAU)])

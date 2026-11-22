@@ -32,6 +32,7 @@ var PLUMBER_MASS_LIMB: float = 2.0      ## Light limbs flop around nicely.
 var PLUMBER_LINEAR_DAMP: float = 0.15
 var PLUMBER_ANGULAR_DAMP: float = 1.5   ## Higher = less spinning like a top when flung.
 var FOOT_FRICTION: float = 1.2          ## Grippy feet.
+var SWING_FOOT_FRICTION: float = 0.05   ## A foot in its swing phase slides instead of catching the floor.
 var BODY_FRICTION: float = 0.35         ## Slippery everything else.
 
 # --- Active ragdoll controller ----------------------------------------------

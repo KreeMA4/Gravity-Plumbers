@@ -811,6 +811,8 @@ func _any_grab_held() -> bool:
 func _update_limb_targets(dt: float) -> void:
 	var ident: Quaternion = Quaternion.IDENTITY
 	if state == State.RAGDOLL:
+		_set_foot_grip("l", true)
+		_set_foot_grip("r", true)
 		for role: Variant in limbs.keys():
 			var lc: LimbController = limbs[role]
 			lc.target = ident
@@ -856,6 +858,9 @@ func _update_limb_targets(dt: float) -> void:
 				# A squelchy rubber footstep each time a foot comes down.
 				AudioManager.play_at("footstep", foot_sole_position(side), -10.0, 1.0, 0.15)
 		_stance_prev[side] = stance
+		# Only a planted foot grips. A swinging foot that brushes the floor slides,
+		# so it can't drag the legs back and tip the body over forwards.
+		_set_foot_grip(side, stance or not on_feet or gait_amount < 0.3)
 	hip_h -= (0.035 * gait_run * gait_amount + 0.16 * squash) * height_scale   # run crouch, landing squash
 	gait_ride = hip_h - (_hip_off["l"] as Vector3).y
 	# --- legs --- (stronger leg muscles on foot so they keep up with the step cycle)
@@ -939,6 +944,15 @@ func _update_limb_targets(dt: float) -> void:
 			shoulder = Quaternion(Vector3.BACK, sx * (2.6 + sin(state_time * 12.0) * 0.2))
 		_set_target("shoulder_" + side, shoulder)
 		_set_target("elbow_" + side, Quaternion(Vector3.RIGHT, elbow))
+
+
+func _set_foot_grip(side: String, grip: bool) -> void:
+	var foot: RigidBody3D = bodies.get(RagdollBuilder.foot_name(side, simple_rig)) as RigidBody3D
+	if foot == null or foot.physics_material_override == null:
+		return
+	var want: float = Tuning.FOOT_FRICTION if grip else Tuning.SWING_FOOT_FRICTION
+	if not is_equal_approx(foot.physics_material_override.friction, want):
+		foot.physics_material_override.friction = want
 
 
 ## Hips aim in the world (upright frame) while walking, relative to the pelvis otherwise.
