@@ -5,6 +5,8 @@ extends RefCounted
 
 ## Levels are added here as their data files land (milestones M5, M6, M9).
 const LEVELS: Array = [
+	{"id": "hub", "name": "The Rusty Pipe (Hub)", "script": "res://scripts/levels/level_data/hub.gd", "hub": true},
+	{"id": "bathroom", "name": "1. Orbital Bathroom", "script": "res://scripts/levels/level_data/orbital_bathroom.gd", "par": 300.0},
 	{"id": "workshop", "name": "Plumbing Workshop (test)", "script": "res://scripts/levels/level_data/workshop.gd", "par": 240.0, "debug": true},
 ]
 

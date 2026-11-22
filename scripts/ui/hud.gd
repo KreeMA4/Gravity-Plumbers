@@ -121,6 +121,13 @@ func _ready() -> void:
 	bottom.add_child(tool_label)
 
 
+## The hub has no sludge, clock or orders.
+func set_hub_mode(on: bool) -> void:
+	_bar.visible = not on
+	_timer_label.visible = not on
+	checklist_panel.visible = not on
+
+
 ## Rebuild the checklist from WorkOrderManager.orders.
 func set_orders(orders: Array) -> void:
 	for c: Node in checklist_box.get_children():

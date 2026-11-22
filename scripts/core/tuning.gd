@@ -8,9 +8,9 @@ extends Node
 ## See docs/TUNING.md for advice on which knobs to turn first.
 
 # --- Build info --------------------------------------------------------------
-var GAME_VERSION: String = "0.5.0"     ## Shown in menus and checked on join.
+var GAME_VERSION: String = "0.6.0"     ## Shown in menus and checked on join.
 var PROTOCOL_VERSION: int = 3           ## Bump when network messages change.
-var MILESTONE_ID: String = "M5"        ## Shown in the debug overlay.
+var MILESTONE_ID: String = "M6"        ## Shown in the debug overlay.
 
 # --- Gravity -----------------------------------------------------------------
 var GRAVITY_STRENGTH: float = 9.8       ## m/s^2 of normal station gravity.

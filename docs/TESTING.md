@@ -65,3 +65,16 @@ Main menu → Debug rooms → **Plumbing Workshop**.
 - [ ] After a ceiling flip, grab the golden duck near the ceiling: "A golden duck!"
 - [ ] Finishing all orders shows the Results screen with stars, time and awards.
 - [ ] Solo can never fail: the sludge stops at 95%.
+
+## M6: Hub and Level 1
+- [ ] Main menu → **Play Solo** puts you in **The Rusty Pipe** hub: a warm room with a big window and a skylight. There's no sludge meter or timer.
+- [ ] The tool rack is on the left wall, the practice gravity switch and rail on the right, and the JOB CONSOLE at the back.
+- [ ] USE at the console opens **PICK A JOB**, with a difficulty choice (Chill / Normal / Chaos) and level buttons showing your stars.
+- [ ] Pick **1. Orbital Bathroom**. Then:
+  - [ ] Tape the sink leak (tape from the rack). The shower leak and the toilet clog unlock.
+  - [ ] Tape the shower leak, and plunge the toilet clog 4 times.
+  - [ ] The switch order unlocks. Hold the rail with GRAB (or turn BOOTS on), then pull the switch: the warning counts down and gravity flips.
+  - [ ] On the ceiling, tape the ceiling leak and crank the main valve with the wrench.
+  - [ ] The results screen shows 1-3 stars. **Back to Hub** returns to the hub.
+- [ ] Reopen the console: the bathroom shows your stars (saved). Close and restart the game: the stars are still there.
+- [ ] Bonus: find the golden duck in the bathroom (hint: near the ceiling cabinet).

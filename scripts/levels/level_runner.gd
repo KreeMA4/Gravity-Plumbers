@@ -85,6 +85,7 @@ func _ready() -> void:
 	hud.camera = local_player.camera.cam
 	hud.set_orders(orders.orders)
 	hud.checklist_panel.visible = not is_hub
+	hud.set_hub_mode(is_hub)
 	pause_menu = PauseMenu.new()
 	add_child(pause_menu)
 	pause_menu.closed.connect(func() -> void: local_player.set_blocked(false))
@@ -182,17 +183,29 @@ func _attach_local() -> void:
 		NetManager.set_local_input(local_player.input)
 
 
+## Spawn pads whose "up" matches the current gravity (so you never spawn on
+## a ceiling that is currently a ceiling). Falls back to all pads.
+func _usable_pads() -> Array:
+	var up: Vector3 = -GravityManager.global_dir
+	var out: Array = []
+	for t: Variant in spawn_pads:
+		if (t as Transform3D).basis.y.normalized().dot(up) > 0.7:
+			out.append(t)
+	return out if out.size() > 0 else spawn_pads
+
+
 func get_spawn(index: int) -> Transform3D:
-	if spawn_pads.is_empty():
+	var pads: Array = _usable_pads()
+	if pads.is_empty():
 		return Transform3D(Basis.IDENTITY, Vector3(0, 0.1, 0))
-	return spawn_pads[index % spawn_pads.size()] as Transform3D
+	return pads[index % pads.size()] as Transform3D
 
 
 ## Respawn at the safe pad nearest to where you got flushed.
 func _respawn_point(p: Plumber) -> Transform3D:
 	var best: Transform3D = get_spawn(p.player_index)
 	var best_d: float = INF
-	for t: Variant in spawn_pads:
+	for t: Variant in _usable_pads():
 		var x: Transform3D = t as Transform3D
 		var d: float = x.origin.distance_squared_to(p.get_center())
 		if d < best_d:
