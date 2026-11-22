@@ -1,6 +1,6 @@
 # Status
 
-**Current milestone:** M4 (grab and tools)
+**Current milestone:** M5 (plumbing gameplay)
 
 ## Done
 - project.godot: Jolt Physics, Compatibility renderer, gravity 0, 60 Hz physics, physics interpolation, landscape, touch emulated from the mouse.
@@ -15,12 +15,14 @@
 - M2: toon shader (3 bands plus rim), inverted-hull outline pass, procedural starfield, nebula and planet sky, goo shader, blob shadow shader, cached materials (Mats), PipeBuilder (tubes with parallel-transport frames, flanges, valve wheel, MultiMesh bolts), LevelBuilder (rooms with doorways and windows, rounded edges, lamps, pipes, rocks), the Look Test Room, and a menu backdrop with a window.
 - M3: 11-body active ragdoll (7-body "simple" rig on Low quality) with ConeTwist and Hinge joints, PD muscles (LimbController), a hover spring and upright controller along local up, camera-relative walking with a procedural walk cycle, jump with coyote time and buffering, Flop / Get Up, impact and unbraced-shift ragdoll triggers, recovery with a dizzy wobble, magnetic boots with charge, flush and respawn, grab hands (PinJoint to props, plumbers and static pipes; bracing; throwing), googly eyes, mouth states, a swaying mustache, squash and stretch, multi-touch controls, a gravity-following camera with collision, and the Ragdoll Playground with bots.
 - M4: ToolBase (right-hand equip with a locked 6DOF joint, context Use label, tap Grab R to drop, auto-return to the rack when lost), Plunger (suction anchor that braces you, clog plunging, zero-G pop), Pipe Wrench (valve turning, tightening, bonk), Duct Tape (leak sealing, taping props in place), G-Wrench (axis override on props and plumbers, custom self-stick direction, beam, cooldown), ToolRack, and Use-to-interact for switches.
+- M5: WorkOrder and WorkOrderManager (ordered and parallel orders, early targets, net state; unit tested), SludgeMeter (unit tested; solo can't hard-fail), Leak (spray, tape sealing, goo spitting), Valve (wrench turning, two-player valves that turn at half speed solo), Clog (plunger hits, pop burst), Tank (goo blobs and canisters), PipeSegment plus PipePort (snap radius and angle, locks in), GravitySwitch (global, field or field direction actions; two-player; relay "required_dir"), Vent hazard (telegraphed PUSH burst), GoldenDuck, GooCanister, a GooPool of 60 pooled blobs, KillVolume, LevelCatalog, LevelSpawner (data-driven), LevelRunner (rules, storms, dispatcher lines, flush penalty, all-flushed grace, win/fail, awards), the HUD (sludge bar, timer, checklist, toasts, shift warning with an edge pulse, teammate pointers), the pause menu, the level select console, the results screen, and the Plumbing Workshop test level.
 
 ## UNVERIFIED
 **No Godot binary was run in the build environment** (running the downloaded editor was blocked). Everything below passed static checks only (`gdtoolkit` parse and `tools/validate_project.py`):
 - That the project opens in Godot 4.6 with zero errors and zero warnings.
 - That `tests/run_all.gd` passes.
 - That the menu renders correctly at 1920x1080 and 2400x1080.
+- M5: Area3D tank counting with pooled blobs re-enabled through process_mode; PUSH vent strength; the HUD layout on 21:9 screens.
 - M4: how the equipped-tool alignment looks in the hand, and that Generic6DOFJoint3D (defaults: all axes locked) holds tools rigidly under Jolt.
 - M3: the actual ragdoll feel under Jolt: that it stands, walks without tripping, recovers reliably, and doesn't jitter. Joint hinge angle signs (see TUNING.md). Multi-touch on a real device.
 - M2: that the shaders compile on the Compatibility renderer, and that custom triangle winding (pipe tubes, caps) faces outward.

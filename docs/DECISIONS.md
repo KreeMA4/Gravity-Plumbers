@@ -18,3 +18,8 @@ One line per decision: what was decided, and why.
 - **The mustache is cosmetic springs, not physics bodies.** It looks the same, costs nothing and never needs syncing.
 - **Grab hands landed in M3** (the brief has them in M4), because bracing during gravity shifts needs them. M4 adds the tools.
 - **Touch controls take touches in `_input`.** The top 16% of the screen is left alone so HUD buttons stay tappable.
+- **"A single player can never hard-fail."** In solo, the sludge meter is capped at 95% and the timer never fails you. Fewer stars is the only penalty. Co-op can flood.
+- **Two-player valves and switches work solo:** a two-player valve turns at half speed with one player, and a two-player switch needs only one pull. Same code, but solo stays completable.
+- **Gameplay objects share one tiny network state format** (`LevelObject.get_net_state()`). The host broadcasts them a few times a second with the sludge and the work orders, instead of a custom message per object.
+- **Pooled goo blobs are disabled with `process_mode = DISABLED`**, which takes them out of the physics space, instead of being freed and recreated.
+- **Results screen landed in M5** so the test level can finish; M6 adds the hub and Level 1.

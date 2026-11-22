@@ -49,3 +49,19 @@ Tick these off on your phone after each milestone. If anything fails, copy the r
 - [ ] **G-Wrench:** aim at a crate and tap USE ("ZAP"): a cyan beam appears and the crate falls toward the direction you aimed for 8 s. The label then counts down the 15 s cooldown. Aim at the ceiling and ZAP: YOU fall up onto the ceiling for 8 s.
 - [ ] Hold GRAB on a bot, then swing around: the bot flails, and letting go throws it.
 - [ ] Throw a tool out of the window: about 20 s later it reappears on the rack with a sparkle.
+
+## M5: Plumbing gameplay
+Main menu → Debug rooms → **Plumbing Workshop**.
+- [ ] The HUD shows: the SLUDGE meter and a timer at the top, the WORK ORDERS list on the left (tap ORDERS to collapse it), and the gravity arrow at the bottom.
+- [ ] DISPATCH-O-TRON says hello in a subtitle box, with blippy gibberish (once audio exists, M10).
+- [ ] The pink leak on the back wall sprays goo and the sludge meter rises. Grab the **tape** from the rack and hold USE on the leak: a green ring grows, then the leak seals and the order ticks off.
+- [ ] The red valve order unlocks only after the leak is done (ordered). Hold USE with the **wrench** on the valve: it spins and completes.
+- [ ] Carry the loose teal pipe to the see-through gap on the back wall: it snaps in when lined up (vertical).
+- [ ] Stab the purple clog with the **plunger** 6 times: it pops and launches goo blobs.
+- [ ] Throw both goo canisters into the glass tank: the counter goes "8 / 8" and confetti pops.
+- [ ] Pull the yellow **gravity switch** (USE next to it): 3-2-1 warning, then the floor becomes the ceiling. Unbraced plumbers tumble.
+- [ ] The vent in the floor glows red, then burps goo and pushes you up.
+- [ ] Every 45 s or so a gravity storm hits, with a siren, a flashing red screen edge and a countdown.
+- [ ] After a ceiling flip, grab the golden duck near the ceiling: "A golden duck!"
+- [ ] Finishing all orders shows the Results screen with stars, time and awards.
+- [ ] Solo can never fail: the sludge stops at 95%.

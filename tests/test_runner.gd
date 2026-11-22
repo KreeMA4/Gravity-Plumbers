@@ -7,6 +7,7 @@ extends RefCounted
 const TEST_FILES: Array = [
 	"res://tests/save_test.gd",
 	"res://tests/gravity_test.gd",
+	"res://tests/work_order_test.gd",
 ]
 
 

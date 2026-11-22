@@ -6,6 +6,7 @@ const DEBUG_ROOMS: Array = [
 	["Gravity Test Room", "gravity_test"],
 	["Look Test Room", "look_test"],
 	["Ragdoll Playground", "playground"],
+	["Plumbing Workshop", "game:workshop"],
 	["Physics Soak Test", "soak_test"],
 	["Run Tests", "tests"],
 ]
@@ -74,9 +75,16 @@ func _ready() -> void:
 		var b: Button = UITheme.small_button(str(e[0]))
 		b.custom_minimum_size = Vector2(320, 96)
 		var screen_id: String = str(e[1])
-		b.pressed.connect(func() -> void: GameState.goto_screen(screen_id))
+		if screen_id.begins_with("game:"):
+			var lid: String = screen_id.substr(5)
+			b.pressed.connect(func() -> void:
+				NetManager.start_solo()
+				GameState.start_level(lid))
+			_needs(b, "game")
+		else:
+			b.pressed.connect(func() -> void: GameState.goto_screen(screen_id))
+			_needs(b, screen_id)
 		_debug_box.add_child(b)
-		_needs(b, screen_id)
 	var dbg_overlay: Button = UITheme.small_button("Debug overlay")
 	dbg_overlay.custom_minimum_size = Vector2(320, 96)
 	dbg_overlay.pressed.connect(_toggle_overlay)
