@@ -53,6 +53,7 @@ def main():
     ap.add_argument("--timeout", type=int, default=600)
     ap.add_argument("--expect", action="append", default=[])
     ap.add_argument("--allow", action="append", default=[])
+    ap.add_argument("--quiet", action="store_true", help="don't echo Godot output (it's still in --log)")
     ap.add_argument("cmd", nargs=argparse.REMAINDER)
     a = ap.parse_args()
     cmd = a.cmd[1:] if a.cmd and a.cmd[0] == "--" else a.cmd
@@ -66,7 +67,8 @@ def main():
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors="replace")
         try:
             for line in proc.stdout:
-                sys.stdout.write(line)
+                if not a.quiet:
+                    sys.stdout.write(line)
                 logf.write(line)
                 lines.append(line.rstrip("\n"))
                 if time.time() - start > a.timeout:
@@ -79,10 +81,16 @@ def main():
             proc.kill()
     code = proc.returncode
     problems = []
+    counts = {}
     for i, line in enumerate(lines):
         if any(p.search(line) for p in ERROR_PATTERNS) and not any(p.search(line) for p in allow):
-            ctx = " | ".join(l.strip() for l in lines[i + 1:i + 3] if l.strip())
-            problems.append("%s  %s" % (line.strip(), ("[" + ctx + "]") if ctx else ""))
+            ctx = " | ".join(l.strip() for l in lines[i + 1:i + 2] if l.strip())
+            key = "%s  %s" % (line.strip(), ("[" + ctx + "]") if ctx else "")
+            if key not in counts:
+                problems.append(key)
+                counts[key] = 0
+            counts[key] += 1
+    problems = ["%s  (x%d)" % (k, counts[k]) if counts[k] > 1 else k for k in problems]
     missing = [e for e in a.expect if not any(re.search(e, l) for l in lines)]
     secs = time.time() - start
     ok = (code == 0) and not timed_out and not problems and not missing

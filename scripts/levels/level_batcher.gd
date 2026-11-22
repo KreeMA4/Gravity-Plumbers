@@ -54,7 +54,9 @@ static func _collect(world: Node3D, n: Node, groups: Dictionary, to_free: Array)
 			if mi.mesh != null and mi.material_override != null and mi.visible:
 				var mat: Material = mi.material_override
 				# Group by material and by whether the mesh has UVs (primitives do, tubes don't).
-				var has_uv: bool = (mi.mesh.surface_get_format(0) & Mesh.ARRAY_FORMAT_TEX_UV) != 0
+				# (Mesh has no surface_get_format() in GDScript; check the arrays instead.)
+				var arrays: Array = mi.mesh.surface_get_arrays(0)
+				var has_uv: bool = arrays.size() > Mesh.ARRAY_TEX_UV and arrays[Mesh.ARRAY_TEX_UV] != null
 				var key: String = "%d_%s_%d" % [mat.get_instance_id(), str(has_uv), int(mi.cast_shadow)]
 				if not groups.has(key):
 					groups[key] = [mat, [], mi.cast_shadow]

@@ -142,7 +142,7 @@ jobs:
           FAILED=0
           run() {  # name, expect-regex, user args...
             local name="$1"; local expect="$2"; shift 2
-            python3 tools/ci/run_godot.py --name "smoke: $name" --log "ci_logs/smoke_${name}.log" --timeout 300 \
+            python3 tools/ci/run_godot.py --quiet --name "smoke: $name" --log "ci_logs/smoke_${name}.log" --timeout 300 \
               --expect "$expect" -- "$GODOT" --headless --path . --fixed-fps 60 --quit-after 600 -- "$@" || FAILED=1
           }
           run main_menu   "Screen -> main_menu"
@@ -156,7 +156,7 @@ jobs:
 
       - name: Physics soak test (4 plumbers, random gravity, 2 min simulated)
         run: >
-          python3 tools/ci/run_godot.py --name "physics soak test" --log ci_logs/soak.log --timeout 1200
+          python3 tools/ci/run_godot.py --quiet --name "physics soak test" --log ci_logs/soak.log --timeout 1200
           --expect "Soak test PASSED" --
           "$GODOT" --headless --path . --fixed-fps 60 -- --soak
 
@@ -168,7 +168,7 @@ jobs:
           FAILED=0
           shot() {  # name, user args...
             local name="$1"; shift
-            xvfb-run -a -s "-screen 0 1920x1080x24" python3 tools/ci/run_godot.py --name "render: $name" \
+            xvfb-run -a -s "-screen 0 1920x1080x24" python3 tools/ci/run_godot.py --quiet --name "render: $name" \
               --log "ci_logs/render_${name}.log" --timeout 600 --expect "CI screenshot saved" -- \
               "$GODOT" --path . --rendering-driver opengl3 --fixed-fps 60 --quit-after 420 -- \
               "--ci-screenshot=$PWD/ci_screens/$name.png" --ci-frames=360 "$@" || FAILED=1

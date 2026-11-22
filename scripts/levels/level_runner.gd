@@ -454,7 +454,9 @@ func _process(delta: float) -> void:
 		local_player.touch.use_label = me.get_use_label()
 	if sky_material != null:
 		var storm: float = 0.6 if GravityManager.phase != GravityManager.Phase.IDLE else 0.0
-		var cur: float = float(sky_material.get_shader_parameter("storm"))
+		# get_shader_parameter() returns null until the uniform has been set once.
+		var raw: Variant = sky_material.get_shader_parameter("storm")
+		var cur: float = float(raw) if raw != null else 0.0
 		sky_material.set_shader_parameter("storm", move_toward(cur, storm, delta * 1.5))
 
 
