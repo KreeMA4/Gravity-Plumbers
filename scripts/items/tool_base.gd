@@ -143,6 +143,7 @@ func _physics_process(dt: float) -> void:
 	var use_now: bool = holder.input.held(PlumberInput.USE)
 	if use_now and not _prev_use:
 		_use_pressed()
+		used.emit(self)
 	elif use_now:
 		_use_held(dt)
 	elif _prev_use:
