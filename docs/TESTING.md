@@ -29,7 +29,7 @@ Tick these off on your phone after each milestone. If anything fails, copy the r
 
 ## M3: Ragdoll plumber
 - [ ] Debug rooms → **Ragdoll Playground**: a chunky plumber with big googly eyes and a mustache stands on the floor.
-- [ ] The left thumb moves (a joystick appears under it). The legs swing in a walk cycle and the arms swing opposite.
+- [ ] A round MOVE joystick is always visible bottom-left; dragging it moves the plumber in all 8 directions relative to the camera. The legs swing in a walk cycle and the arms swing opposite.
 - [ ] Dragging on the right half orbits the camera. After a second of walking, it settles back behind you.
 - [ ] **JUMP** jumps. Holding it jumps slightly higher. Walking off the stairs and jumping right away still works (coyote time).
 - [ ] **FLOP** makes the plumber go limp. After about 1-2 seconds it wobbles back up by itself. **UP!** speeds this up.
