@@ -150,6 +150,9 @@ func _ready() -> void:
 	for role: String in limb_defs.keys():
 		var d: Array = limb_defs[role]
 		limbs[role] = LimbController.new(bodies[str(d[0])] as RigidBody3D, bodies[str(d[1])] as RigidBody3D, float(d[2]))
+	for role: String in ["hip_l", "hip_r", "knee_l", "knee_r"]:
+		if limbs.has(role):
+			(limbs[role] as LimbController).feed_forward = true
 	for side: String in ["l", "r"]:
 		var h: Array = rig["hand_" + side]
 		hand_bodies[side] = bodies[str(h[0])]
@@ -807,6 +810,7 @@ func _update_limb_targets(dt: float) -> void:
 			var lc: LimbController = limbs[role]
 			lc.target = ident
 			lc.use_world = false
+			lc.boost = 1.0   # limp means limp
 		return
 	var up: Vector3 = local_up
 	var v: Vector3 = pelvis.linear_velocity
@@ -846,7 +850,12 @@ func _update_limb_targets(dt: float) -> void:
 		_stance_prev[side] = stance
 	hip_h -= (0.035 * gait_run * gait_amount + 0.16 * squash) * height_scale   # run crouch, landing squash
 	gait_ride = hip_h - (_hip_off["l"] as Vector3).y
-	# --- legs ---
+	# --- legs --- (stronger leg muscles on foot so they keep up with the step cycle)
+	var leg_boost: float = Tuning.LEG_STRENGTH_ON_FEET if on_feet else 1.5
+	for role: String in ["hip_l", "hip_r", "knee_l", "knee_r"]:
+		var llc: LimbController = limbs.get(role) as LimbController
+		if llc != null:
+			llc.boost = leg_boost
 	if on_feet:
 		var hip_above: float = ground_dist + (_hip_off["l"] as Vector3).y
 		for side: String in ["l", "r"]:

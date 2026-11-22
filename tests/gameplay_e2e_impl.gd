@@ -447,6 +447,28 @@ func joint_angle(child: String, parent: String) -> float:
 	return 2.0 * atan2(q.x, q.w)
 
 
+## Side-on close-up of the legs (diagnostic screenshot): a temporary camera at
+## knee height, 2.2 m to the plumber's right, looking at the hips.
+func leg_shot(shot_name: String) -> void:
+	if shot_dir == "":
+		return
+	var prev: Camera3D = get_viewport().get_camera_3d()
+	var cam: Camera3D = Camera3D.new()
+	arena.add_child(cam)
+	var up: Vector3 = plumber.local_up
+	var right: Vector3 = plumber.facing.cross(up).normalized()
+	var hip: Vector3 = plumber.get_center() - up * 0.35
+	cam.global_position = hip + right * 2.2 + up * 0.05
+	cam.look_at(hip, up)
+	cam.fov = 40.0
+	cam.current = true
+	await screenshot(shot_name)
+	cam.current = false
+	cam.queue_free()
+	if prev != null:
+		prev.current = true
+
+
 ## One line of leg diagnostics (printed as "info" so CI shows it).
 func leg_report(tag: String) -> void:
 	var t_hip: float = 0.0
@@ -457,6 +479,14 @@ func leg_report(tag: String) -> void:
 	if plumber.limbs.has("knee_l"):
 		var qk: Quaternion = (plumber.limbs["knee_l"] as LimbController).target
 		t_knee = 2.0 * atan2(qk.x, qk.w)
+	var up: Vector3 = plumber.local_up
+	var floor_h: float = (plumber.get_center() - up * plumber.ground_dist).dot(up)
+	var th: RigidBody3D = plumber.bodies.get("thigh_l") as RigidBody3D
+	var sh: RigidBody3D = plumber.bodies.get("shin_l") as RigidBody3D
+	if th != null and sh != null:
+		print("  info  heights[%s] above floor: pelvis %.3f thigh_c %.3f shin_c %.3f sole %.3f | thigh_down %s shin_down %s" % [tag,
+			plumber.pelvis.global_position.dot(up) - floor_h, th.global_position.dot(up) - floor_h, sh.global_position.dot(up) - floor_h,
+			plumber.foot_sole_position("l").dot(up) - floor_h, str((th.global_basis * Vector3.DOWN).snapped(Vector3(0.01, 0.01, 0.01))), str((sh.global_basis * Vector3.DOWN).snapped(Vector3(0.01, 0.01, 0.01)))])
 	print("  info  legs[%s]: clear L %.3f R %.3f | ground_dist %.3f ride %.3f grounded %s | hipL tgt %.2f act %.2f | kneeL tgt %.2f act %.2f | amt %.2f phase %.2f" % [
 		tag, sole_clearance("l"), sole_clearance("r"), plumber.ground_dist, plumber.gait_ride, str(plumber.grounded),
 		t_hip, joint_angle("thigh_l", "pelvis"), t_knee, joint_angle("shin_l", "thigh_l"), plumber.gait_amount, fposmod(plumber.walk_phase, TAU)])
@@ -528,6 +558,7 @@ func _check_walk() -> void:
 	ok(sole_clearance("l") < 0.06 and sole_clearance("r") < 0.06, "idle: both feet on the ground (%.3f, %.3f m)" % [sole_clearance("l"), sole_clearance("r")])
 	ok(plumber.gait_amount < 0.05, "idle: no walk cycle while standing (%.2f)" % plumber.gait_amount)
 	leg_report("idle")
+	await leg_shot("legs_idle")
 	if plumber.limbs.has("knee_l"):
 		var qk: Quaternion = (plumber.limbs["knee_l"] as LimbController).target
 		var tk: float = 2.0 * atan2(qk.x, qk.w)
@@ -546,6 +577,9 @@ func _check_walk() -> void:
 	Input.action_press("move_forward", 0.6)
 	await frames(50)
 	await screenshot("anim_walk")
+	await leg_shot("legs_walk_a")
+	await frames(9)
+	await leg_shot("legs_walk_b")
 	Input.action_release("move_forward")
 	# Stops when input stops.
 	await frames(80)
@@ -554,6 +588,7 @@ func _check_walk() -> void:
 	ok(v.length() < 0.35, "walk: stops when the stick is released (%.2f m/s)" % v.length())
 	ok(plumber.gait_amount < 0.15, "walk: legs stop stepping (%.2f)" % plumber.gait_amount)
 	leg_report("stopped")
+	await leg_shot("legs_stopped")
 	ok(sole_clearance("l") < 0.07 and sole_clearance("r") < 0.07, "walk: ends standing on both feet")
 
 

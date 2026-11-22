@@ -40,6 +40,7 @@ var STIFFNESS_RAGDOLL: float = 0.05     ## Leftover muscle when limp (not a nood
 var STIFFNESS_DIZZY: float = 0.3        ## Wobbly muscle right after getting up.
 var JOINT_KP: float = 420.0             ## Spring strength pulling each joint to its pose.
 var JOINT_KD: float = 32.0              ## Damping on each joint (too low = jitter, too high = stiff).
+var LEG_STRENGTH_ON_FEET: float = 2.6   ## Leg muscle multiplier while standing/walking (ragdoll still scales it down).
 var JOINT_MAX_ANG_ACCEL: float = 900.0  ## Clamp on joint correction (rad/s^2) so nothing explodes.
 var UPRIGHT_KP: float = 260.0           ## How hard chest and pelvis turn to stay upright.
 var UPRIGHT_KD: float = 26.0

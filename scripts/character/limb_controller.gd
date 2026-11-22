@@ -16,6 +16,12 @@ var target_world: Quaternion = Quaternion.IDENTITY
 var use_world: bool = false                       ## true = aim at target_world (grabbing arms)
 var strength: float = 1.0                         ## Per-joint multiplier (necks are weaker).
 var reaction: float = 0.35                        ## Fraction of the push given back to the parent.
+## Legs: also match the goal's own rotation speed (velocity feed-forward), so a
+## fast-moving gait target is tracked instead of lagging behind and averaging out.
+var feed_forward: bool = false
+var boost: float = 1.0                            ## Extra strength multiplier set per tick (legs while walking).
+var _prev_goal: Quaternion = Quaternion.IDENTITY
+var _has_prev: bool = false
 
 
 func _init(child_body: RigidBody3D, parent_body: RigidBody3D, joint_strength: float = 1.0) -> void:
@@ -48,7 +54,14 @@ func update(dt: float, stiffness: float) -> void:
 		goal = parent.global_basis.get_rotation_quaternion() * target
 	var err: Vector3 = rotation_error(qc, goal)
 	var rel_w: Vector3 = child.angular_velocity - parent.angular_velocity
-	var k: float = stiffness * strength
+	if feed_forward:
+		var goal_w: Vector3 = Vector3.ZERO
+		if _has_prev and dt > 0.0:
+			goal_w = (rotation_error(_prev_goal, goal) / dt).limit_length(30.0)
+		rel_w = child.angular_velocity - goal_w
+	_prev_goal = goal
+	_has_prev = true
+	var k: float = stiffness * strength * boost
 	var acc: Vector3 = err * (Tuning.JOINT_KP * k) - rel_w * (Tuning.JOINT_KD * sqrt(maxf(k, 0.0)))
 	acc = acc.limit_length(Tuning.JOINT_MAX_ANG_ACCEL)
 	var dw: Vector3 = acc * dt

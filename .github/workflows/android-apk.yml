@@ -340,7 +340,7 @@ jobs:
       - name: Screenshot report (exposure stats + thumbnails in the log)
         if: always()
         env:
-          THUMBS: level_bathroom,level_cafeteria,level_reactor,playground,anim_idle,anim_walk,anim_run,pickup_prompt
+          THUMBS: legs_idle,legs_walk_a,legs_walk_b,legs_stopped,level_waterworks,anim_walk,anim_run,pickup_prompt
         run: |
           pip install --quiet pillow
           ls ci_screens/*.png > /dev/null 2>&1 && python3 tools/ci/thumbs.py ci_screens/*.png || echo "no screenshots"
