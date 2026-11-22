@@ -879,10 +879,14 @@ func _update_limb_targets(dt: float) -> void:
 	var hips_world: bool = on_feet and Tuning.HIPS_UPRIGHT_FRAME
 	_hips_in_world(hips_world)
 	if on_feet:
-		var floor_h: float = pelvis.global_position.dot(up) - ground_dist
+		# Foot height comes from the DESIRED hip height (the ride target), not the
+		# measured one. Using the measured height was positive feedback: legs that
+		# pushed the pelvis up asked for even longer legs, ending as stiff stilts
+		# that tipped the pelvis 20-60 deg. Now a pelvis that rides too high simply
+		# lifts the feet and settles back; one that sags gets pushed back up.
+		var hip_above: float = hip_h
 		for side: String in ["l", "r"]:
 			var fc2: Vector2 = cyc[side]
-			var hip_above: float = (pelvis.global_transform * (_hip_off[side] as Vector3)).dot(up) - floor_h
 			# A planted foot aims a little below the floor so it really presses on it
 			# (carries weight, grips) instead of hovering on a target exactly at floor level.
 			var press: float = Tuning.STANCE_PRESS * height_scale if fc2.y <= 0.0001 else 0.0

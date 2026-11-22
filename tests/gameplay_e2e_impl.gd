@@ -138,7 +138,15 @@ func sole_clearance(side: String) -> float:
 	var hit: Dictionary = plumber.get_world_3d().direct_space_state.intersect_ray(q)
 	if hit.is_empty():
 		return 9.0
-	return (sole - (hit["position"] as Vector3)).dot(up)
+	var clear: float = (sole - (hit["position"] as Vector3)).dot(up)
+	# The foot is a box: when it pitches, a toe or heel corner is lower than the sole centre.
+	var foot: RigidBody3D = plumber.bodies.get(RagdollBuilder.foot_name(side, plumber.simple_rig)) as RigidBody3D
+	if foot != null:
+		var lowest: float = 0.0
+		for c: Vector3 in [Vector3(0.06, 0, -0.13), Vector3(-0.06, 0, -0.13), Vector3(0.06, 0, 0.13), Vector3(-0.06, 0, 0.13)]:
+			lowest = minf(lowest, (foot.global_basis * c).dot(up))
+		clear += lowest
+	return clear
 
 
 func sole_velocity(side: String) -> Vector3:
@@ -564,15 +572,10 @@ func _sweep() -> void:
 	var defaults: Array = [Tuning.LEG_STRENGTH_ON_FEET, Tuning.LEG_FEED_FORWARD, Tuning.HIPS_UPRIGHT_FRAME,
 		Tuning.STANCE_PRESS, Tuning.UPRIGHT_KP, Tuning.STANCE_FOOT_FRICTION]
 	var configs: Array = [
-		["current", 2.6, true, true, 0.02, 260.0, 0.25],
-		["boost1", 1.0, true, true, 0.02, 260.0, 0.25],
-		["boost1_noFF", 1.0, false, true, 0.02, 260.0, 0.25],
-		["boost1_noFF_pelvisHips", 1.0, false, false, 0.02, 260.0, 0.25],
-		["boost1_noFF_pelvisHips_nopress", 1.0, false, false, 0.0, 260.0, 0.25],
-		["current_upright700", 2.6, true, true, 0.02, 700.0, 0.25],
-		["boost1.6_upright700", 1.6, true, true, 0.02, 700.0, 0.25],
-		["boost1.6_upright700_nopress", 1.6, true, true, 0.0, 700.0, 0.25],
-		["boost1_upright700_pelvisHips", 1.0, true, false, 0.0, 700.0, 0.25],
+		["current", 2.6, true, true, 0.015, 260.0, 0.25],
+		["boost1.6", 1.6, true, true, 0.015, 260.0, 0.25],
+		["boost1.6_stancegrip0.6", 1.6, true, true, 0.015, 260.0, 0.6],
+		["current_nopress", 2.6, true, true, 0.0, 260.0, 0.25],
 	]
 	quiet_legs = true
 	for c: Variant in configs:
@@ -584,6 +587,8 @@ func _sweep() -> void:
 		Tuning.UPRIGHT_KP = float(cfg[5])
 		Tuning.STANCE_FOOT_FRICTION = float(cfg[6])
 		await place(Vector3(0, 0.05, 0) - fwd() * 12.0, 60)
+		await frames(90)   # stand for a while first (the tilt bug only showed after standing)
+		var idle_tilt: float = rad_to_deg(plumber.pelvis.global_basis.y.normalized().angle_to(plumber.local_up))
 		var tilt_sum: float = 0.0
 		var tilt_n: int = 0
 		Input.action_press("move_forward", 0.6)
@@ -598,8 +603,8 @@ func _sweep() -> void:
 			tilt_sum += rad_to_deg(plumber.pelvis.global_basis.y.normalized().angle_to(plumber.local_up))
 			tilt_n += 1
 		Input.action_release("move_forward")
-		print("  info  sweep %-32s tilt %5.1f deg | contact %3.0f%% skate %3.0f%% steps/s %.1f knee_range %.2f vmax %.1f" % [str(cfg[0]),
-			tilt_sum / maxf(1.0, tilt_n), 100.0 * float(m["contact"]), 100.0 * float(m["skate"]), float(m["steps_per_s"]), float(m["knee_bend"]), float(m["vmax"])])
+		print("  info  sweep %-24s idle tilt %4.1f | walk tilt %5.1f deg | contact %3.0f%% skate %3.0f%% steps/s %.1f knee_range %.2f vmax %.1f" % [str(cfg[0]),
+			idle_tilt, tilt_sum / maxf(1.0, tilt_n), 100.0 * float(m["contact"]), 100.0 * float(m["skate"]), float(m["steps_per_s"]), float(m["knee_bend"]), float(m["vmax"])])
 		await frames(30)
 	quiet_legs = false
 	Tuning.LEG_STRENGTH_ON_FEET = float(defaults[0])

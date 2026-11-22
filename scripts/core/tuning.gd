@@ -42,7 +42,7 @@ var STIFFNESS_RAGDOLL: float = 0.05     ## Leftover muscle when limp (not a nood
 var STIFFNESS_DIZZY: float = 0.3        ## Wobbly muscle right after getting up.
 var JOINT_KP: float = 420.0             ## Spring strength pulling each joint to its pose.
 var JOINT_KD: float = 32.0              ## Damping on each joint (too low = jitter, too high = stiff).
-var STANCE_PRESS: float = 0.02          ## A planted foot aims this far (m) below the floor so it bears weight.
+var STANCE_PRESS: float = 0.015          ## A planted foot aims this far (m) below the floor so it bears weight.
 var LEG_FEED_FORWARD: bool = true      ## Legs also match the speed of their moving gait targets.
 var HIPS_UPRIGHT_FRAME: bool = true     ## Hip targets in the upright walking frame (true) or relative to the pelvis.
 var LEG_STRENGTH_ON_FEET: float = 2.6   ## Leg muscle multiplier while standing/walking (ragdoll still scales it down).
