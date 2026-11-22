@@ -208,6 +208,23 @@ func speak(text: String, base_pitch: float = 1.0, pos: Variant = null) -> void:
 			break
 
 
+## On quit, let go of every loaded sound so they're freed cleanly
+## (otherwise Godot reports "resources still in use at exit").
+func _exit_tree() -> void:
+	for item: Variant in _pool3d:
+		(item as AudioStreamPlayer3D).stop()
+		(item as AudioStreamPlayer3D).stream = null
+	for item2: Variant in _pool_ui:
+		(item2 as AudioStreamPlayer).stop()
+		(item2 as AudioStreamPlayer).stream = null
+	if _music_a != null:
+		_music_a.stream = null
+	if _music_storm != null:
+		_music_storm.stream = null
+	_streams.clear()
+	_voice_queue.clear()
+
+
 func _process(delta: float) -> void:
 	# Storm music crossfade.
 	_storm_level = move_toward(_storm_level, _storm_target, delta * 0.8)

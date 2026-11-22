@@ -91,6 +91,9 @@ def main():
                 counts[key] = 0
             counts[key] += 1
     problems = ["%s  (x%d)" % (k, counts[k]) if counts[k] > 1 else k for k in problems]
+    leaks = sorted(set(l.strip() for l in lines if "Resource still in use" in l or "Leaked instance" in l))
+    for l in leaks[:15]:
+        problems.append("  detail: " + l)
     missing = [e for e in a.expect if not any(re.search(e, l) for l in lines)]
     secs = time.time() - start
     ok = (code == 0) and not timed_out and not problems and not missing

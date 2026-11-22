@@ -143,7 +143,7 @@ jobs:
           run() {  # name, expect-regex, user args...
             local name="$1"; local expect="$2"; shift 2
             python3 tools/ci/run_godot.py --quiet --name "smoke: $name" --log "ci_logs/smoke_${name}.log" --timeout 300 \
-              --expect "$expect" -- "$GODOT" --headless --path . --fixed-fps 60 --quit-after 600 -- "$@" || FAILED=1
+              --expect "$expect" -- "$GODOT" --headless --verbose --path . --fixed-fps 60 --quit-after 600 -- "$@" || FAILED=1
           }
           run main_menu   "Screen -> main_menu"
           for s in gravity_test look_test playground customize settings host_join tests; do
