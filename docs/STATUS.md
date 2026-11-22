@@ -22,7 +22,23 @@
 - M9: Level 2 Zero-G Cafeteria (zero-G dining zone, floating food and canisters, G-Wrench intro, two-player valve, plunger anchoring), Level 3 Asteroid Waterworks (two planetoids with sphere gravity, pipes wrapped round the rock, a zero-G gap with a bridge-pipe puzzle), Level 4 Spin-Cycle Habitat (scheduled gravity cycle floor→wall→ceiling→wall, jobs on every wall, relay switch), Level 5 Reactor Plumbing Panic (3 rooms, storms every 40 s, two coordinated room switches that turn on and aim the reactor field, vents, and THE GREAT CLOG boss fed with goo), Spinner decorations, difficulty scaling, and mid-level join.
 - M10: synthesized audio (`tools/make_audio.py`: 33 SFX plus 3 seamless music loops, with the storm layer crossfading), blip voice for the dispatcher and plumbers (screams when flung), footsteps, landing dust, jump rings, hit-stop, a full Settings screen (graphics, comfort, sound, controls, misc, recent log), blob shadows, a static-mesh batching pass for the draw-call budget, interpolation-safe decorative animation, the physics soak test (`godot -- --soak`, exit code), every UI string collected in `assets/lang/strings.csv`, and final docs.
 
-## UNVERIFIED
+## VERIFIED by Godot 4.6 in GitHub Actions (run #11, all green)
+These checks run on every push and every manual build. See `.github/workflows/android-apk.yml`.
+- Headless project import: no errors.
+- **37/37 logic tests pass** (gravity, work orders, room codes, network codecs, looks, save migration).
+- **Every screen and all 7 levels boot** and run 10 s of simulated time with zero script or engine errors: main menu, gravity test, look test, playground, customize, settings, host/join, tests, hub, levels 1-5 and the workshop.
+- **Physics soak test passes:** 4 bot plumbers, 30 crates and 40 goo blobs, with random gravity flips for 2 minutes of simulated time. No NaN and nothing escaping.
+- **Real OpenGL rendering** (Compatibility renderer through Mesa): every shader compiles. Screenshots of the main menu, the look test, Level 1 and Level 5 are in the `ci-screenshots` artifact.
+- **Android export**, with these APK checks passing: signed (debug key), package `org.gravityplumbers.game`, minSdk 24 / targetSdk 35, arm64-v8a, launcher activity, landscape orientation, and all 5 permissions.
+
+Bugs that CI found and that are now fixed:
+- Mesh batching called an API that doesn't exist in GDScript.
+- The sky shader parameter was read while still null.
+- Static resource caches and audio playbacks were left over at quit; the game now shuts down cleanly.
+- `get_meta(key, null)` printed an error on every grab or bonk of a non-plumber body. The validator now rejects that pattern.
+
+## UNVERIFIED (needs a real phone)
+
 **No Godot binary was run in the build environment, for ANY milestone** (running the downloaded editor was blocked). Everything below passed static checks only (`gdtoolkit` parse and `tools/validate_project.py`):
 - That the project opens in Godot 4.6 with zero errors and zero warnings.
 - That `tests/run_all.gd` passes.
@@ -41,7 +57,7 @@
 How to check on your phone: import the project, press Play, and check that the main menu appears. Then open the Debugger tab and check that there are no red errors. Three-finger tap: the overlay shows FPS.
 
 ## Known issues
-- **Every milestone is unverified at runtime.** All 108 scripts pass a full GDScript parse (gdtoolkit) and the project validator (paths, autoloads, class names, input actions, member references on autoloads and classes, RPC annotations). But Godot itself never ran this code, so expect a first round of small runtime errors (wrong argument types, API differences). Copy them from the Debugger → Errors tab and send them over.
+- **Gameplay feel and touch input are unverified.** Godot now runs every screen and level in CI with zero errors, but nobody has played it with fingers yet. Ragdoll feel, touch controls, real networking between phones, and performance on a phone still need testing on a device.
 - **Client latency:** clients feel about 2 × ping + 100 ms on their own plumber (pure host authority). Fine on LAN and hotspots. See NETWORK.md.
 - **Joint hinge angle signs under Jolt are a guess.** If knees or elbows bend backwards, flip the limits in `ragdoll_builder.gd` (see TUNING.md).
 - **Level coordinates were placed by hand without play-testing**, so some objects may need nudging.
