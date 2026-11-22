@@ -811,8 +811,8 @@ func _any_grab_held() -> bool:
 func _update_limb_targets(dt: float) -> void:
 	var ident: Quaternion = Quaternion.IDENTITY
 	if state == State.RAGDOLL:
-		_set_foot_grip("l", true)
-		_set_foot_grip("r", true)
+		_set_foot_grip("l", Tuning.FOOT_FRICTION)
+		_set_foot_grip("r", Tuning.FOOT_FRICTION)
 		for role: Variant in limbs.keys():
 			var lc: LimbController = limbs[role]
 			lc.target = ident
@@ -858,9 +858,15 @@ func _update_limb_targets(dt: float) -> void:
 				# A squelchy rubber footstep each time a foot comes down.
 				AudioManager.play_at("footstep", foot_sole_position(side), -10.0, 1.0, 0.15)
 		_stance_prev[side] = stance
-		# Only a planted foot grips. A swinging foot that brushes the floor slides,
-		# so it can't drag the legs back and tip the body over forwards.
-		_set_foot_grip(side, stance or not on_feet or gait_amount < 0.3)
+		# The plumber is pushed along by forces on the body, not by the feet, so a
+		# gripping foot acts as a pivot and tips the body forward (measured: the
+		# pelvis pitched 50-60 deg). While walking, feet only PLACE themselves:
+		# a planted foot slides a little, a swinging one slides freely. Standing
+		# still, both feet grip fully again.
+		var grip: float = Tuning.FOOT_FRICTION
+		if on_feet and gait_amount >= 0.3:
+			grip = Tuning.STANCE_FOOT_FRICTION if stance else Tuning.SWING_FOOT_FRICTION
+		_set_foot_grip(side, grip)
 	hip_h -= (0.035 * gait_run * gait_amount + 0.16 * squash) * height_scale   # run crouch, landing squash
 	gait_ride = hip_h - (_hip_off["l"] as Vector3).y
 	# --- legs --- (stronger leg muscles on foot so they keep up with the step cycle)
@@ -946,11 +952,10 @@ func _update_limb_targets(dt: float) -> void:
 		_set_target("elbow_" + side, Quaternion(Vector3.RIGHT, elbow))
 
 
-func _set_foot_grip(side: String, grip: bool) -> void:
+func _set_foot_grip(side: String, want: float) -> void:
 	var foot: RigidBody3D = bodies.get(RagdollBuilder.foot_name(side, simple_rig)) as RigidBody3D
 	if foot == null or foot.physics_material_override == null:
 		return
-	var want: float = Tuning.FOOT_FRICTION if grip else Tuning.SWING_FOOT_FRICTION
 	if not is_equal_approx(foot.physics_material_override.friction, want):
 		foot.physics_material_override.friction = want
 
