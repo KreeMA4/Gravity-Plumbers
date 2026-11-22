@@ -161,6 +161,7 @@ jobs:
           "$GODOT" --headless --verbose --path . --fixed-fps 60 -- --soak
 
       - name: Rendered smoke tests (real OpenGL via Mesa, compiles shaders, screenshots)
+        # The CI machine has no sound card, so audio uses Godot's Dummy driver here.
         run: |
           set -uo pipefail
           sudo apt-get update -qq && sudo apt-get install -y -qq xvfb libgl1-mesa-dri libglx-mesa0 > /dev/null
@@ -170,7 +171,7 @@ jobs:
             local name="$1"; shift
             xvfb-run -a -s "-screen 0 1920x1080x24" python3 tools/ci/run_godot.py --quiet --name "render: $name" \
               --log "ci_logs/render_${name}.log" --timeout 600 --expect "CI screenshot saved" -- \
-              "$GODOT" --verbose --path . --rendering-driver opengl3 --fixed-fps 60 --quit-after 5000 -- --ci-quit-frames=420 \
+              "$GODOT" --verbose --path . --rendering-driver opengl3 --audio-driver Dummy --fixed-fps 60 --quit-after 5000 -- --ci-quit-frames=420 \
               "--ci-screenshot=$PWD/ci_screens/$name.png" --ci-frames=360 "$@" || FAILED=1
           }
           shot main_menu
