@@ -12,6 +12,8 @@ signal app_paused(paused: bool)
 ## Screens get added here as each milestone lands.
 const SCREENS: Dictionary = {
 	"main_menu": "res://scripts/ui/main_menu.gd",
+	"gravity_test": "res://scripts/levels/gravity_test_room.gd",
+	"tests": "res://scripts/ui/tests_screen.gd",
 }
 
 var difficulty: int = 1                 ## 0 Chill, 1 Normal, 2 Chaos.

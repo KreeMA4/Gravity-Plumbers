@@ -7,6 +7,7 @@ const DEBUG_ROOMS: Array = [
 	["Look Test Room", "look_test"],
 	["Ragdoll Playground", "playground"],
 	["Physics Soak Test", "soak_test"],
+	["Run Tests", "tests"],
 ]
 
 var _root: Control

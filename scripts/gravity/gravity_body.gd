@@ -15,6 +15,7 @@ var multiplier: float = 1.0          ## 0 = ignore gravity (e.g. carried by magn
 var cancel_field: bool = false       ## Plumber magnetic boots: ignore field gravity entirely.
 var override_dir: Vector3 = Vector3.ZERO
 var override_time: float = 0.0
+var override_strength: float = 9.8
 var home: Transform3D = Transform3D.IDENTITY  ## Where to reset if lost in space.
 var last_gravity: Vector3 = Vector3.ZERO      ## Gravity applied last tick (for effects / camera).
 
@@ -31,10 +32,11 @@ func _ready() -> void:
 
 
 ## Temporarily point this body's gravity along `dir` (G-Wrench). Host replicates it.
-func set_override(dir: Vector3, duration: float) -> void:
+func set_override(dir: Vector3, duration: float, strength: float = 9.8) -> void:
 	if not dir.is_finite() or dir.length_squared() < 0.5:
 		return
 	override_dir = dir.normalized()
+	override_strength = strength
 	override_time = duration
 	override_changed.emit(true)
 	if body != null:
@@ -53,7 +55,7 @@ func has_override() -> bool:
 ## The gravity this body currently feels.
 func current_gravity() -> Vector3:
 	if override_time > 0.0:
-		return override_dir * Tuning.GRAVITY_STRENGTH
+		return override_dir * override_strength
 	if cancel_field:
 		return Vector3.ZERO
 	return GravityManager.get_gravity_at(body.global_position) * multiplier
