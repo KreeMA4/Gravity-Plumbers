@@ -1,0 +1,204 @@
+keys,en
+RANDOMIZE!,RANDOMIZE!
+Colours only,Colours only
+Undo,Undo
+Done,Done
+LOCK,LOCK
+< Back,< Back
+HOST,HOST
+JOIN,JOIN
+Your name:,Your name:
+Host a game on this phone,Host a game on this phone
+Room name:,Room name:
+First job:,First job:
+Difficulty:,Difficulty:
+Port (advanced):,Port (advanced):
+Start Hosting,Start Hosting
+Games nearby (same Wi-Fi / hotspot),Games nearby (same Wi-Fi / hotspot)
+Looking...,Looking...
+Room code,Room code
+Join with code,Join with code
+Advanced: IP + port,Advanced: IP + port
+Join IP,Join IP
+No Wi-Fi? Hotspot help,No Wi-Fi? Hotspot help
+Got it,Got it
+Connecting...,Connecting...
+Cancel,Cancel
+Looking for games... (they appear here automatically),Looking for games... (they appear here automatically)
+The Rusty Pipe (hub),The Rusty Pipe (hub)
+ORDERS,ORDERS
+0:00,0:00
+WORK ORDERS,WORK ORDERS
+[x] ,[x] 
+[ ] ,[ ] 
+[~] ,[~] 
+DISPATCH-O-TRON: ,DISPATCH-O-TRON: 
+PICK A JOB,PICK A JOB
+Back,Back
+Copy code,Copy code
+Plumbers,Plumbers
+START!,START!
++ Test bot,+ Test bot
+I'M READY,I'M READY
+Customise,Customise
+Leave,Leave
+Kick,Kick
+Copied!,Copied!
+READY!,READY!
+"GRAVITY
+PLUMBERS","GRAVITY
+PLUMBERS"
+Keep the station from flooding!,Keep the station from flooding!
+Customize,Customize
+Settings,Settings
+Debug rooms,Debug rooms
+Debug overlay,Debug overlay
+PAUSED,PAUSED
+Resume,Resume
+Quit to Menu,Quit to Menu
+"You're the host.
+Quitting ends the game for everyone!","You're the host.
+Quitting ends the game for everyone!"
+End Game,End Game
+STATION SAVED!,STATION SAVED!
+Try Again,Try Again
+Back to Hub,Back to Hub
+Waiting for the host...,Waiting for the host...
+Main Menu,Main Menu
+< Done,< Done
+SETTINGS,SETTINGS
+Toggle debug overlay,Toggle debug overlay
+Show recent log,Show recent log
+Reset settings,Reset settings
+"MIRROR
+(customise)","MIRROR
+(customise)"
+"JOB CONSOLE
+(host picks level)","JOB CONSOLE
+(host picks level)"
+The Rusty Pipe (Hub),The Rusty Pipe (Hub)
+1. Orbital Bathroom,1. Orbital Bathroom
+2. Zero-G Cafeteria,2. Zero-G Cafeteria
+3. Asteroid Waterworks,3. Asteroid Waterworks
+4. Spin-Cycle Habitat,4. Spin-Cycle Habitat
+5. Reactor Plumbing Panic,5. Reactor Plumbing Panic
+Plumbing Workshop (test),Plumbing Workshop (test)
+"Look test room
+Drag to orbit, pinch to zoom","Look test room
+Drag to orbit, pinch to zoom"
+Asteroid Waterworks,Asteroid Waterworks
+Tape the leak on the water main (walk round the rock!).,Tape the leak on the water main (walk round the rock!).
+"Tape the leak at the SOUTH POLE (keep walking, gravity follows you).","Tape the leak at the SOUTH POLE (keep walking, gravity follows you)."
+Crank the pole valve shut.,Crank the pole valve shut.
+Fix the bridge pipe between the rocks (float the piece into the gap).,Fix the bridge pipe between the rocks (float the piece into the gap).
+Carry both goo canisters to the tank on the little moon.,Carry both goo canisters to the tank on the little moon.
+Plunge the clog on the moon's far side.,Plunge the clog on the moon's far side.
+Welcome to the Waterworks! Mind the drop. There's no drop. There's no down. Good luck!,Welcome to the Waterworks! Mind the drop. There's no drop. There's no down. Good luck!
+Rock wobble!,Rock wobble!
+Out of this world!,Out of this world!
+Rock solid work!,Rock solid work!
+Asteroid-tastic!,Asteroid-tastic!
+Drifted off into space! Reprinting plumber...,Drifted off into space! Reprinting plumber...
+Lost in space! Back you come.,Lost in space! Back you come.
+The Rusty Pipe,The Rusty Pipe
+THE RUSTY PIPE,THE RUSTY PIPE
+"PRACTICE
+GRAVITY","PRACTICE
+GRAVITY"
+"Welcome aboard The Rusty Pipe! JOB CONSOLE picks a job, the MIRROR changes your look. Tools are on the rack.","Welcome aboard The Rusty Pipe! JOB CONSOLE picks a job, the MIRROR changes your look. Tools are on the rack."
+Practice flip! Grab that rail!,Practice flip! Grab that rail!
+Orbital Bathroom,Orbital Bathroom
+SPACE LOO,SPACE LOO
+"HOLD THE RAIL
+WHEN IT FLIPS!","HOLD THE RAIL
+WHEN IT FLIPS!"
+"Grab the TAPE (rack, Grab R) and tape the leaky sink!","Grab the TAPE (rack, Grab R) and tape the leaky sink!"
+Tape the shower leak (hop on the step).,Tape the shower leak (hop on the step).
+Plunge the clogged space toilet!,Plunge the clogged space toilet!
+Pull the gravity switch. Hold the rail or use BOOTS!,Pull the gravity switch. Hold the rail or use BOOTS!
+Walk on the ceiling and tape the leak up there!,Walk on the ceiling and tape the leak up there!
+Crank the main valve shut with the WRENCH.,Crank the main valve shut with the WRENCH.
+"Ah, the Orbital Bathroom. Our most... aromatic module. Let's fix it!","Ah, the Orbital Bathroom. Our most... aromatic module. Let's fix it!"
+Gravity flip in 3! Grab the rail or BOOTS ON!,Gravity flip in 3! Grab the rail or BOOTS ON!
+Here comes the flip!,Here comes the flip!
+"Sparkling! Well, less sticky.","Sparkling! Well, less sticky."
+Plumbing perfection!,Plumbing perfection!
+That's going on your report card!,That's going on your report card!
+"Flushed! Ironic, in a bathroom.","Flushed! Ironic, in a bathroom."
+Down the cosmic U-bend!,Down the cosmic U-bend!
+Reactor Plumbing Panic,Reactor Plumbing Panic
+COOLANT,COOLANT
+WASTE,WASTE
+REACTOR CORE,REACTOR CORE
+COOLANT ROOM: tape both coolant leaks.,COOLANT ROOM: tape both coolant leaks.
+WASTE ROOM: two plumbers on the big valve!,WASTE ROOM: two plumbers on the big valve!
+Carry the feed pipe from Coolant to the reactor wall.,Carry the feed pipe from Coolant to the reactor wall.
+Pull BOTH room switches to aim the reactor's gravity.,Pull BOTH room switches to aim the reactor's gravity.
+FEED THE GREAT CLOG GOO UNTIL IT BURSTS!,FEED THE GREAT CLOG GOO UNTIL IT BURSTS!
+Fill the emergency tank in the Waste room.,Fill the emergency tank in the Waste room.
+"This is it, plumbers. The reactor. The pipes. The PANIC. Let's fix the whole station!","This is it, plumbers. The reactor. The pipes. The PANIC. Let's fix the whole station!"
+Reactor surge! Gravity storm!,Reactor surge! Gravity storm!
+Brace brace brace!,Brace brace brace!
+Here we gooooo!,Here we gooooo!
+Everything's sideways again!,Everything's sideways again!
+Heroic plumbing!,Heroic plumbing!
+The reactor thanks you!,The reactor thanks you!
+That's the stuff!,That's the stuff!
+Flushed into the reactor! It's fine. Probably.,Flushed into the reactor! It's fine. Probably.
+Down the big drain!,Down the big drain!
+Spin-Cycle Habitat,Spin-Cycle Habitat
+FLOOR 1,FLOOR 1
+FLOOR 2,FLOOR 2
+FLOOR 3,FLOOR 3
+FLOOR 4,FLOOR 4
+FLOOR 1: tape the leak before the spin!,FLOOR 1: tape the leak before the spin!
+FLOOR 2: tape the leak on the right wall.,FLOOR 2: tape the leak on the right wall.
+FLOOR 2: plunge the clog high on the right wall.,FLOOR 2: plunge the clog high on the right wall.
+FLOOR 3: crank the valve on the ceiling.,FLOOR 3: crank the valve on the ceiling.
+FLOOR 3: hit the relay switch to drop everything onto FLOOR 4.,FLOOR 3: hit the relay switch to drop everything onto FLOOR 4.
+FLOOR 4: get both canisters into the wall tank (it only fills when FLOOR 4 is down!).,FLOOR 4: get both canisters into the wall tank (it only fills when FLOOR 4 is down!).
+"The Spin-Cycle Habitat! Every half minute, down moves to the next wall. Plan ahead, plumbers!","The Spin-Cycle Habitat! Every half minute, down moves to the next wall. Plan ahead, plumbers!"
+Spin cycle! Next floor coming up!,Spin cycle! Next floor coming up!
+Rotating! Grab a rail!,Rotating! Grab a rail!
+"Floors are walls, walls are floors!","Floors are walls, walls are floors!"
+Spin-credible!,Spin-credible!
+Round and round and fixed!,Round and round and fixed!
+Clean cycle!,Clean cycle!
+Rinsed and flushed!,Rinsed and flushed!
+Spun right out of there!,Spun right out of there!
+Plumbing Workshop,Plumbing Workshop
+Tape up the leaky orange pipe!,Tape up the leaky orange pipe!
+Crank the red valve with the wrench.,Crank the red valve with the wrench.
+Reconnect the missing teal pipe.,Reconnect the missing teal pipe.
+Plunge the purple clog until it pops.,Plunge the purple clog until it pops.
+Fill the tank with goo (canisters count!).,Fill the tank with goo (canisters count!).
+Pull the yellow gravity switch.,Pull the yellow gravity switch.
+"Welcome to the workshop, plumbers! Everything here is broken. On purpose. Mostly.","Welcome to the workshop, plumbers! Everything here is broken. On purpose. Mostly."
+Gravity storm! Grab a pipe!,Gravity storm! Grab a pipe!
+Uh oh. Floors are optional now!,Uh oh. Floors are optional now!
+Hold on to something! Or someone!,Hold on to something! Or someone!
+"Ooh, shiny work!","Ooh, shiny work!"
+That's a fix! I think.,That's a fix! I think.
+Plumbtastic!,Plumbtastic!
+Whoosh! Down the cosmic drain!,Whoosh! Down the cosmic drain!
+Flushed! We'll print you a new one.,Flushed! We'll print you a new one.
+Zero-G Cafeteria,Zero-G Cafeteria
+KITCHEN,KITCHEN
+ZERO-G DINING,ZERO-G DINING
+Tape the leaking soda pipe in the kitchen.,Tape the leaking soda pipe in the kitchen.
+Fetch the floating goo canisters into the kitchen tank (try the G-WRENCH!).,Fetch the floating goo canisters into the kitchen tank (try the G-WRENCH!).
+Plunge the food chute clog (anchor with the plunger first!).,Plunge the food chute clog (anchor with the plunger first!).
+Turn the cooler valve - it takes TWO plumbers!,Turn the cooler valve - it takes TWO plumbers!
+Float the feed pipe back to the kitchen wall.,Float the feed pipe back to the kitchen wall.
+Seal the ceiling drip over the dining hall.,Seal the ceiling drip over the dining hall.
+Lunch time! The cafeteria's gravity generator is on its break. Again.,Lunch time! The cafeteria's gravity generator is on its break. Again.
+Gravity hiccup!,Gravity hiccup!
+Delicious work!,Delicious work!
+Five stars. For the plumbing. Not the food.,Five stars. For the plumbing. Not the food.
+"Clean plates, clean pipes!","Clean plates, clean pipes!"
+Flushed with the leftovers!,Flushed with the leftovers!
+Back to the kitchen with you!,Back to the kitchen with you!
+2 PLUMBERS,2 PLUMBERS
+GRAVITY,GRAVITY
+NEED ONE MORE!,NEED ONE MORE!
+TOOLS,TOOLS

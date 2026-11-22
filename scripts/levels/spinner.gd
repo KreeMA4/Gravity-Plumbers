@@ -6,7 +6,7 @@ var axis: Vector3 = Vector3.UP
 var speed: float = 0.3
 
 
-func _process(delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	rotate(axis.normalized(), speed * delta)
 
 

@@ -91,7 +91,7 @@ func _on_done() -> void:
 	FX.stars(get_parent(), global_position + normal * 0.3)
 
 
-func _process(_delta: float) -> void:
+func _physics_process(_delta: float) -> void:
 	if _wheel != null:
 		_wheel.basis = PipeBuilder.basis_along(normal) * Basis(Vector3.UP, progress * TAU * 2.0)
 

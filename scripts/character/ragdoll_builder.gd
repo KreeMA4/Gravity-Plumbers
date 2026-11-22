@@ -23,6 +23,11 @@ const ROLE_HAND_L: String = "hand_l"
 const ROLE_HAND_R: String = "hand_r"
 
 
+## Name of the body that carries the foot on a side.
+static func foot_name(side: String, simple: bool) -> String:
+	return ("leg_" if simple else "shin_") + side
+
+
 ## Returns a Dictionary:
 ##  "bodies": {name: RigidBody3D}, "rest": {name: Transform3D (local to root)},
 ##  "limbs": {role: [child_name, parent_name, strength]},

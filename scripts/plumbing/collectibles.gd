@@ -65,7 +65,7 @@ func show_collected() -> void:
 	queue_free()
 
 
-func _process(delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	_t += delta
 	if _body != null:
 		_body.rotation = Vector3(0, _t * 1.5, 0)

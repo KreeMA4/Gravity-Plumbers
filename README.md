@@ -4,13 +4,37 @@ A 3D co-op physics comedy for Android, made in Godot 4. Up to 4 wobbly space plu
 keep a falling-apart space station from flooding with cosmic sludge, while the
 station's gravity keeps shifting.
 
-* **Engine:** Godot **4.6** or newer (4.4 and 4.5 should also work, but they are not tested).
-  GDScript only. Jolt physics. Compatibility (OpenGL) renderer.
+* **Engine:** Godot **4.6** or newer is recommended. The minimum is **4.4**, the first version
+  with built-in Jolt Physics and 3D physics interpolation. GDScript only. Compatibility (OpenGL)
+  renderer.
 * **Platform:** Android phones in landscape, with touch controls. It also runs on desktop with
   keyboard, mouse or a gamepad, for testing.
 * **No downloads:** every model, texture and sound is made by code in this project.
 
-See `docs/STATUS.md` for what works right now and what is still **UNVERIFIED**.
+**Status: release candidate 1 (v0.10.0, milestone M10).** All 5 levels, the hub, co-op,
+customization, audio and settings are written. **Important:** this project was built without
+being able to run Godot, so none of it has been tried in the engine yet. Every script passes a
+GDScript parser and the project validator, but expect a few small runtime errors on first
+launch. See `docs/STATUS.md` for details and `docs/TESTING.md` for a checklist to work through
+on your phone.
+
+## What's in the game
+* **Hub, "The Rusty Pipe":** a job console to pick a level and difficulty, a mirror to change
+  your outfit, a tool rack, and a practice gravity switch.
+* **The 5 levels**, each built around one gravity idea:
+  1. **Orbital Bathroom** (tutorial): a single 180° flip.
+  2. **Zero-G Cafeteria:** zero-G zones and the G-Wrench.
+  3. **Asteroid Waterworks:** planetoid gravity you can walk all the way around.
+  4. **Spin-Cycle Habitat:** a scheduled cycle that rotates "down" from wall to wall.
+  5. **Reactor Plumbing Panic:** gravity storms and THE GREAT CLOG boss.
+* **Wobbly active-ragdoll plumbers:** grab, carry, throw, hang, flop and get up.
+* **Tools:** plunger, pipe wrench, duct tape and the gravity-bending **G-Wrench**.
+* **Co-op for 2-4 players** over LAN or a phone hotspot (room codes, LAN browsing), with
+  best-effort internet play through UPnP.
+* **Full customization** with a randomizer, locks and 3 outfit slots. Golden ducks unlock more items.
+* **All models, textures, sounds and music are made by code.**
+* **Debug rooms:** Gravity Test Room, Look Test Room, Ragdoll Playground, Plumbing Workshop,
+  Physics Soak Test, and Run Tests.
 
 ---
 
@@ -42,7 +66,7 @@ writes logs you can read afterwards:
 * `user://logs/game.log`: the game's own messages.
 * `user://logs/godot.log`: the engine's messages.
 
-On Android, `user://` is the app's private data folder. The in-game **Settings → Show log**
+On Android, `user://` is the app's private data folder. The in-game **Settings → Show recent log**
 button shows the last lines on screen.
 
 ## 3. Controls
@@ -114,4 +138,20 @@ press Play, and feel the difference. `docs/TUNING.md` says which ones to try fir
 
 ## 8. Known issues
 
-See `docs/STATUS.md`.
+* **Nothing has been run in Godot yet** (see the status note at the top). Please report the first errors you hit.
+* On the internet (as opposed to LAN or hotspot), clients feel their own plumber lag, because the host is in charge of all physics.
+* If knees or elbows bend the wrong way, see the "Joint limits" note in `docs/TUNING.md`.
+* More in `docs/STATUS.md`.
+
+## 9. Project layout
+
+```
+project.godot, export_presets.cfg, icon.svg, README.md
+docs/      STATUS, DECISIONS, TUNING, NETWORK, TESTING
+tools/     validate_project.py, make_audio.py, make_zip.py, extract_strings.py
+tests/     run_all.gd, test_runner.gd + logic tests
+assets/    audio/*.wav (generated), lang/strings.csv
+shaders/   toon, outline, starfield (sky), goo, blob_shadow
+scenes/    main.tscn (the only scene; everything else is built in code)
+scripts/   core/ gravity/ character/ items/ plumbing/ net/ levels/ ui/ fx/ audio/
+```

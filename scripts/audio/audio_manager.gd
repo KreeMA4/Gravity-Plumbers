@@ -150,15 +150,27 @@ func play_music(track: String) -> void:
 		return
 	var main: AudioStream = get_stream("music_" + track)
 	if main != null:
+		_make_loop(main)
 		_music_a.stream = main
 		_music_a.volume_db = -6.0
 		_music_a.play()
 	if track == "game":
 		var storm: AudioStream = get_stream("music_storm")
 		if storm != null:
+			_make_loop(storm)
 			_music_storm.stream = storm
 			_music_storm.volume_db = -60.0
 			_music_storm.play()
+
+
+## The .wav files are imported without loop points; loop them in code
+## (so there's no fiddly .import file to keep in sync).
+func _make_loop(s: AudioStream) -> void:
+	if s is AudioStreamWAV:
+		var w: AudioStreamWAV = s as AudioStreamWAV
+		w.loop_mode = AudioStreamWAV.LOOP_FORWARD
+		w.loop_begin = 0
+		w.loop_end = int(w.get_length() * float(w.mix_rate))
 
 
 func _on_shift_warning(_dir: Vector3, _t: float) -> void:

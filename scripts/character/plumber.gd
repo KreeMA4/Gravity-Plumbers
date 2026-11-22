@@ -82,6 +82,7 @@ var grab_time_total: float = 0.0     ## for the silly end-of-level awards
 var ragdoll_count: int = 0
 
 var puppet_velocity: Vector3 = Vector3.ZERO
+var _blob: MeshInstance3D = null
 var _coyote: float = 0.0
 var _jump_buffer: float = 0.0
 var _jump_hold: float = 0.0
@@ -140,6 +141,16 @@ func _ready() -> void:
 	local_up = spawn_transform.basis.y.normalized()
 	facing = -spawn_transform.basis.z.normalized()
 	_setup_grab_hands()
+	if Quality.blob_shadows:
+		_blob = MeshInstance3D.new()
+		_blob.name = "BlobShadow"
+		var pm: PlaneMesh = PlaneMesh.new()
+		pm.size = Vector2(0.9, 0.9)
+		_blob.mesh = pm
+		_blob.material_override = Mats.blob_shadow()
+		_blob.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_blob.top_level = true
+		add_child(_blob)
 	GravityManager.shift_started.connect(_on_gravity_shift)
 
 
@@ -225,6 +236,9 @@ func go_ragdoll(min_time: float = -1.0) -> void:
 	ragdoll_min_time = min_time if min_time > 0.0 else Tuning.RAGDOLL_MIN_TIME
 	if state != State.RAGDOLL:
 		ragdoll_count += 1
+		if get_velocity().length() > 4.0:
+			AudioManager.play_at("whoosh", get_center(), -4.0)
+			AudioManager.speak("aaah", look.voice_pitch() * 1.3, get_center())
 	_set_state(State.RAGDOLL)
 
 
@@ -328,6 +342,8 @@ func respawn() -> void:
 ## Client-side puppets: frozen kinematic bodies moved by network snapshots.
 func set_puppet(on: bool) -> void:
 	is_puppet = on
+	if _blob != null:
+		_blob.visible = not on
 	for rb: RigidBody3D in body_list:
 		rb.freeze_mode = RigidBody3D.FREEZE_MODE_KINEMATIC
 		rb.freeze = on
@@ -442,6 +458,8 @@ func _probe_ground() -> void:
 	var hit: Dictionary = _ray(from, from - local_up * length)
 	_was_grounded = grounded
 	if hit.is_empty():
+		if _blob != null:
+			_blob.visible = false
 		near_ground = false
 		grounded = false
 		ground_dist = 99.0
@@ -449,11 +467,20 @@ func _probe_ground() -> void:
 		return
 	near_ground = true
 	ground_dist = from.distance_to(hit["position"] as Vector3)
+	if _blob != null:
+		var n: Vector3 = (hit["normal"] as Vector3).normalized()
+		_blob.global_transform = Transform3D(PipeBuilder.basis_along(n), (hit["position"] as Vector3) + n * 0.02)
+		_blob.visible = visible
+		var k: float = clampf(1.0 - ground_dist / (length + 0.01), 0.3, 1.0)
+		_blob.scale = Vector3(k, 1.0, k)
 	ground_normal = hit["normal"] as Vector3
 	ground_body = hit.get("collider")
 	grounded = ground_dist <= Tuning.RIDE_HEIGHT * height_scale + 0.2 and ground_normal.dot(local_up) > 0.45
 	if grounded and not _was_grounded and state == State.ACTIVE:
 		landed.emit(self)
+		if pelvis.linear_velocity.dot(local_up) < -2.5:
+			AudioManager.play_at("land", get_center(), -4.0)
+			FX.dust(get_parent(), hit["position"] as Vector3, local_up)
 
 
 func _handle_buttons(dt: float) -> void:
@@ -601,7 +628,14 @@ func _apply_movement(dt: float) -> void:
 	pelvis.apply_central_force(accel * total_mass * 0.6)
 	chest.apply_central_force(accel * total_mass * 0.4)
 	if grounded:
+		var before: float = walk_phase
 		walk_phase += dt * v_h.length() * Tuning.WALK_CYCLE_RATE * PI * 0.5
+		# A squelchy rubber footstep each time a foot comes down.
+		if floori(before / PI) != floori(walk_phase / PI) and v_h.length() > 0.6:
+			var side: String = "l" if floori(walk_phase / PI) % 2 == 0 else "r"
+			var foot: RigidBody3D = bodies.get(RagdollBuilder.foot_name(side, simple_rig)) as RigidBody3D
+			var at: Vector3 = foot.global_position if foot != null else get_center()
+			AudioManager.play_at("footstep", at, -10.0, 1.0, 0.15)
 
 
 func _apply_jump(dt: float) -> void:
@@ -624,6 +658,7 @@ func _apply_jump(dt: float) -> void:
 		_no_hover = 0.3
 		_skip_impact = 2
 		AudioManager.play_at("jump", get_center(), -2.0, look.voice_pitch())
+		FX.boing_ring(get_parent(), get_center() - local_up * Tuning.RIDE_HEIGHT * height_scale, local_up)
 		jumped.emit(self)
 	if _jump_hold > 0.0:
 		_jump_hold -= dt

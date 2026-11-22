@@ -10,6 +10,8 @@ var _preview: Node3D
 
 
 func _ready() -> void:
+	# Nothing here is physics; it's animated in _process, so opt out of interpolation.
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	GravityManager.reset_all()
 	var palette: Dictionary = LevelBuilder.DEFAULT_PALETTE
 	LevelBuilder.build_environment(self, palette)

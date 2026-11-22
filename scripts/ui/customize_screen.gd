@@ -47,6 +47,7 @@ func set_overlay(on: bool) -> void:
 
 
 func _ready() -> void:
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	_rng.randomize()
 	_ducks = SaveData.duck_count()
 	var b: PackedByteArray = SaveData.get_look_bytes()

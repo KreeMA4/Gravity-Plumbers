@@ -116,3 +116,15 @@ Pick each level at the hub console (try different difficulties).
 - [ ] Both room switches (Coolant + Waste) together complete their order and point the reactor gravity sideways.
 - [ ] **Chill** gives longer warnings (4 s), slower sludge and fewer storms; **Chaos** gives 1.5 s warnings and more storms.
 - [ ] With 2 phones: start any level, then have the second phone join mid-level. It spawns at a pad and sees the current progress.
+
+## M10: Polish
+- [ ] **Audio:** UI clicks, squelchy footsteps, a jump boing, landing thuds, grab squeaks, impacts, plunger thwock, wrench clank, tape rip, leak hiss, valve creak, pipe snap, goo splats and glugs, a gravity siren then whoomp, boot clamp, flush swirl, dice rattle, an order-done jingle, a level-clear fanfare and a fail wah-wah all play.
+- [ ] Menu music is calm. Gameplay music is a bouncy groove. During a gravity warning a tense layer fades in, then fades out. Loops have no audible gap.
+- [ ] DISPATCH-O-TRON lines play as gibberish blips with subtitles.
+- [ ] **Juice:** dust puffs when landing, a cyan ring on jumps, stars on bonks, squash and stretch on hard hits, a brief freeze on huge hits (Settings → Hit-stop), and camera shake (Settings → Reduce screen shake lowers it).
+- [ ] **Settings:** every slider and toggle changes something live (volumes, button size and opacity, left-handed, single grab, deadzone, look sensitivity, comfort camera, show FPS). Quality Low / Medium / High visibly changes resolution, shadows and outlines. "Auto" re-runs the 4-second benchmark on the main menu.
+- [ ] **Blob shadows** under plumbers on Medium and High.
+- [ ] **Performance:** with 4 plumbers in a level (use lobby test bots), the debug overlay shows about 60 FPS and fewer than 250 draw calls on a mid-range phone. Low quality stays at 30 FPS or more on a weak phone.
+- [ ] **Soak test:** Debug rooms → Physics Soak Test runs for 2 minutes and ends with "PASSED" (no NaN, no out-of-bounds).
+- [ ] **Android lifecycle:** press Home mid-level, then come back: solo is paused, and online clients see "The host paused the app...".
+- [ ] **Export:** Project → Export → Android → Export Project produces an APK that installs and runs.

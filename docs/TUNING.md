@@ -30,3 +30,20 @@ Every number lives in `scripts/core/tuning.gd`, with a comment on each one. Chan
 
 ## Joint limits (in `ragdoll_builder.gd`)
 Elbows use hinge limits `-0.15..2.5` and knees `-2.4..0.1` (radians). If, on your device, elbows or knees bend the wrong way, swap the signs of those two pairs. The hinge angle sign in Jolt is UNVERIFIED (see STATUS.md).
+
+## Gameplay pacing
+- `LEAK_SLUDGE_RATE`, `CLOG_SLUDGE_RATE`, `SLUDGE_FIX_REWARD`: how fast the station floods.
+- `LEAK_SEAL_TIME`, `CLOG_HITS`, `VALVE_TURN_TIME`: how long each job takes.
+- `PIPE_SNAP_RADIUS`, `PIPE_SNAP_ANGLE`: how forgiving pipe snapping is.
+- `DIFFICULTY`: Chill / Normal / Chaos multipliers for sludge, storm interval, warning seconds and time limits. Chill is meant to be very forgiving.
+- `GRAVITY_SHIFT_DURATION`, `GRAVITY_WARNING_*`: shift feel. Warnings are never shorter than 2 s (1 s on Chaos).
+- `G_WRENCH_DURATION`, `G_WRENCH_COOLDOWN`, `G_WRENCH_RANGE`.
+- `RESPAWN_DELAY`, `FLUSH_TIME_PENALTY`, `TOOL_RESPAWN_TIME`.
+
+## Network
+`INPUT_SEND_RATE`, `SNAPSHOT_RATE`, `SNAPSHOT_BYTE_BUDGET`, `INTERP_DELAY` (raise to 0.15 on bad Wi-Fi), `EXTRAPOLATE_MAX`, `STATE_SYNC_RATE`.
+
+## Performance
+- `GOO_BLOB_COUNT` (pool size), `MAX_AWAKE_PROPS`.
+- `LOW_FPS_THRESHOLD` and `LOW_FPS_SECONDS`: when to suggest lowering quality.
+- Quality presets live in `scripts/core/quality.gd` (`PRESETS`).

@@ -51,6 +51,9 @@ static func build(runner: LevelRunner, world: Node3D, d: Dictionary) -> void:
 		for tool: Variant in rack.tools:
 			runner.register_prop(tool as RigidBody3D)
 	_build_objects(runner, world, d)
+	# Merge static meshes into a few big ones (draw-call budget).
+	var merged: int = LevelBatcher.batch_static(world)
+	GameLog.info("Level built; batched static meshes into %d draw groups" % merged)
 	for k: Variant in d.get("kill_volumes", []):
 		var kd: Dictionary = k as Dictionary
 		var kv: KillVolume = KillVolume.new()

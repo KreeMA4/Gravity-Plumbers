@@ -50,6 +50,10 @@ func _process(_delta: float) -> void:
 
 
 func _on_impact(strength: float, _at: Vector3) -> void:
+	# Hit-stop: a 40 ms freeze on really big hits sells the impact.
+	if strength > 14.0 and SaveData.setting_b("hit_stop") and not NetManager.is_online() and Engine.time_scale > 0.9:
+		Engine.time_scale = 0.05
+		get_tree().create_timer(0.04, true, false, true).timeout.connect(func() -> void: Engine.time_scale = 1.0)
 	if strength > 6.0:
 		camera.add_shake(clampf(strength / 20.0, 0.1, 0.6))
 		if SaveData.setting_b("haptics") and OS.has_feature("mobile"):

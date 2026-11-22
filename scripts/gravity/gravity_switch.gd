@@ -140,7 +140,7 @@ func _on_shift_finished(new_dir: Vector3) -> void:
 		mark_done()
 
 
-func _process(delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	cooldown = maxf(0.0, cooldown - delta)
 	if _lever != null:
 		var b: Basis = PipeBuilder.basis_along(normal)

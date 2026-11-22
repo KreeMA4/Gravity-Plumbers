@@ -21,6 +21,8 @@ const SCREENS: Dictionary = {
 	"host_join": "res://scripts/ui/host_join_menu.gd",
 	"lobby": "res://scripts/ui/lobby_screen.gd",
 	"customize": "res://scripts/ui/customize_screen.gd",
+	"settings": "res://scripts/ui/settings_menu.gd",
+	"soak_test": "res://scripts/levels/soak_test.gd",
 }
 
 var difficulty: int = 1                 ## 0 Chill, 1 Normal, 2 Chaos.
@@ -53,6 +55,7 @@ func goto_screen(screen_id: String, params: Dictionary = {}) -> void:
 		GameLog.warn("Screen not available yet: " + screen_id)
 		return
 	get_tree().paused = false
+	Engine.time_scale = 1.0
 	if _current != null and is_instance_valid(_current):
 		_main.remove_child(_current)
 		_current.queue_free()

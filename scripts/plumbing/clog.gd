@@ -77,7 +77,12 @@ func _on_done() -> void:
 		_blob.visible = false
 
 
-func _process(delta: float) -> void:
+func _physics_process(delta: float) -> void:
+	_animate(delta)
+
+
+## Wobble animation (runs on physics ticks so interpolation keeps it smooth).
+func _animate(delta: float) -> void:
 	if _blob == null or done:
 		return
 	_wobble = maxf(0.0, _wobble - delta * 2.5)

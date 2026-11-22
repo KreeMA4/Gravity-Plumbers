@@ -85,6 +85,7 @@ func _feed(amount: int) -> void:
 
 
 func _physics_process(dt: float) -> void:
+	_animate(dt)
 	if not is_open() or not is_host():
 		return
 	_burp_t -= dt

@@ -1,6 +1,6 @@
 # Status
 
-**Current milestone:** M9 (levels 2-5)
+**Current milestone:** M10 — release candidate 1 (v0.10.0)
 
 ## Done
 - project.godot: Jolt Physics, Compatibility renderer, gravity 0, 60 Hz physics, physics interpolation, landscape, touch emulated from the mouse.
@@ -20,12 +20,14 @@
 - M7: NetManager (ENet host/join, version handshake, player list with looks, ready, kick, lobby info, mid-level join with catch-up sync, disconnect handling, ping, ENet traffic stats, rate-limited validated input, 20 Hz snapshots with priority and a byte budget, client interpolation and extrapolation, 5 Hz level state, reliable events, results relay, host-paused notice, fake remote bot through simulated lag and loss, `--server` / `--client=` flags), RoomCode (Crockford base32, forgiving decode; tested), LanDiscovery (UDP beacons with graceful failure), UpnpHelper (worker thread), NetUtil (private IP picking, hotspot-aware), SnapshotSync (tested), the Host/Join screen (LAN list, code, advanced IP, hotspot help, connecting overlay with cancel) and the Lobby screen (code with copy, IPs, UPnP status, player list with 3D previews, ready, kick, level and difficulty, test tools).
 - M8: the customise screen (8 category tabs, a SubViewport turntable preview with drag-spin and reaction hop, an option grid with colour swatches and locked items, a randomizer with per-category locks plus colours-only and undo, 3 outfit slots, name edit, Done), the hub mirror, your plumber idling in the menu backdrop, live outfits in the lobby, "Random on join", host-side look clamping, and look/randomizer unit tests.
 - M9: Level 2 Zero-G Cafeteria (zero-G dining zone, floating food and canisters, G-Wrench intro, two-player valve, plunger anchoring), Level 3 Asteroid Waterworks (two planetoids with sphere gravity, pipes wrapped round the rock, a zero-G gap with a bridge-pipe puzzle), Level 4 Spin-Cycle Habitat (scheduled gravity cycle floor→wall→ceiling→wall, jobs on every wall, relay switch), Level 5 Reactor Plumbing Panic (3 rooms, storms every 40 s, two coordinated room switches that turn on and aim the reactor field, vents, and THE GREAT CLOG boss fed with goo), Spinner decorations, difficulty scaling, and mid-level join.
+- M10: synthesized audio (`tools/make_audio.py`: 33 SFX plus 3 seamless music loops, with the storm layer crossfading), blip voice for the dispatcher and plumbers (screams when flung), footsteps, landing dust, jump rings, hit-stop, a full Settings screen (graphics, comfort, sound, controls, misc, recent log), blob shadows, a static-mesh batching pass for the draw-call budget, interpolation-safe decorative animation, the physics soak test (`godot -- --soak`, exit code), every UI string collected in `assets/lang/strings.csv`, and final docs.
 
 ## UNVERIFIED
-**No Godot binary was run in the build environment** (running the downloaded editor was blocked). Everything below passed static checks only (`gdtoolkit` parse and `tools/validate_project.py`):
+**No Godot binary was run in the build environment, for ANY milestone** (running the downloaded editor was blocked). Everything below passed static checks only (`gdtoolkit` parse and `tools/validate_project.py`):
 - That the project opens in Godot 4.6 with zero errors and zero warnings.
 - That `tests/run_all.gd` passes.
 - That the menu renders correctly at 1920x1080 and 2400x1080.
+- M10: that the generated WAVs import and loop cleanly (looping is set in code), that the batched level meshes look right (they're merged per material), the actual FPS and draw counts on phones, and APK export with the preset.
 - M9: level layouts are hand-placed by coordinates and untested in play. Some objects may sit slightly inside walls or be awkward to reach; nudge positions in `scripts/levels/level_data/*.gd`. Overlapping sphere fields between the two asteroids are blended (equal priority), so they make a weak "saddle" zone.
 - M8: SubViewport preview sizing in the Compatibility renderer; how comfortable "hold to save" outfit slots are to use.
 - M7: everything over a real network: LAN broadcast on Android (multicast lock), hotspot routing, UPnP on real routers, and how interpolation feels at 20 Hz. ENet statistics may report 0 on some platforms.
@@ -39,4 +41,13 @@
 How to check on your phone: import the project, press Play, and check that the main menu appears. Then open the Debugger tab and check that there are no red errors. Three-finger tap: the overlay shows FPS.
 
 ## Known issues
-- None recorded yet.
+- **Every milestone is unverified at runtime.** All 108 scripts pass a full GDScript parse (gdtoolkit) and the project validator (paths, autoloads, class names, input actions, member references on autoloads and classes, RPC annotations). But Godot itself never ran this code, so expect a first round of small runtime errors (wrong argument types, API differences). Copy them from the Debugger → Errors tab and send them over.
+- **Client latency:** clients feel about 2 × ping + 100 ms on their own plumber (pure host authority). Fine on LAN and hotspots. See NETWORK.md.
+- **Joint hinge angle signs under Jolt are a guess.** If knees or elbows bend backwards, flip the limits in `ragdoll_builder.gd` (see TUNING.md).
+- **Level coordinates were placed by hand without play-testing**, so some objects may need nudging.
+- **Look changes from the hub mirror apply from the next level** (the current plumber isn't rebuilt live).
+- **Translation:** only English. Strings are collected in `assets/lang/strings.csv`, but no translation is registered in Project Settings yet.
+- **Running tests headless needs the class cache:** run `godot --headless --import` before `-s res://tests/run_all.gd`.
+
+## How to verify everything on the phone
+Follow `docs/TESTING.md` from M0 down. Each milestone has a short checklist.
