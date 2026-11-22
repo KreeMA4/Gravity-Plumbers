@@ -22,7 +22,7 @@
 - M9: Level 2 Zero-G Cafeteria (zero-G dining zone, floating food and canisters, G-Wrench intro, two-player valve, plunger anchoring), Level 3 Asteroid Waterworks (two planetoids with sphere gravity, pipes wrapped round the rock, a zero-G gap with a bridge-pipe puzzle), Level 4 Spin-Cycle Habitat (scheduled gravity cycle floor→wall→ceiling→wall, jobs on every wall, relay switch), Level 5 Reactor Plumbing Panic (3 rooms, storms every 40 s, two coordinated room switches that turn on and aim the reactor field, vents, and THE GREAT CLOG boss fed with goo), Spinner decorations, difficulty scaling, and mid-level join.
 - M10: synthesized audio (`tools/make_audio.py`: 33 SFX plus 3 seamless music loops, with the storm layer crossfading), blip voice for the dispatcher and plumbers (screams when flung), footsteps, landing dust, jump rings, hit-stop, a full Settings screen (graphics, comfort, sound, controls, misc, recent log), blob shadows, a static-mesh batching pass for the draw-call budget, interpolation-safe decorative animation, the physics soak test (`godot -- --soak`, exit code), every UI string collected in `assets/lang/strings.csv`, and final docs.
 
-## VERIFIED by Godot 4.6 in GitHub Actions (run #17, all green)
+## VERIFIED by Godot 4.6 in GitHub Actions (run #18, all green)
 These checks run on every push and every manual build. See `.github/workflows/android-apk.yml`.
 - Headless project import: no errors.
 - **42/42 logic tests pass** (now including the joystick maths: 8 directions, deadzone and analog, on-screen at 7 aspect ratios with notch padding; also gravity, work orders, room codes, network codecs, looks, save migration).
@@ -35,6 +35,8 @@ These checks run on every push and every manual build. See `.github/workflows/an
   - Analog half and full deflection, re-centre under the thumb, and return home all work.
   - Camera drag, the Jump button, and multi-touch (move + Grab + Jump) all work. WASD keys still work.
 - **Android export**, with these APK checks passing: signed (debug key), package `org.gravityplumbers.game`, minSdk 24 / targetSdk 35, arm64-v8a, launcher activity, landscape orientation, and all 5 permissions.
+
+- **Every APK is identifiable** (run #18 onwards): it's named `GravityPlumbers-Android-Debug-Run<N>.apk`, with versionName `0.10.0-run<N>` and versionCode `<N>`. The main menu shows `CI run <N> (commit)`. Each export starts from an empty `build/`. The uploaded artifact is downloaded again and its contents, SHA-256 and version are re-checked. The SHA-256 is on the run summary page and in `BUILD_INFO.txt`.
 
 Bugs that CI found and that are now fixed:
 - Mesh batching called an API that doesn't exist in GDScript.
