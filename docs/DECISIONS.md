@@ -23,3 +23,8 @@ One line per decision: what was decided, and why.
 - **Gameplay objects share one tiny network state format** (`LevelObject.get_net_state()`). The host broadcasts them a few times a second with the sludge and the work orders, instead of a custom message per object.
 - **Pooled goo blobs are disabled with `process_mode = DISABLED`**, which takes them out of the physics space, instead of being freed and recreated.
 - **Results screen landed in M5** so the test level can finish; M6 adds the hub and Level 1.
+- **Every RPC lives on the NetManager autoload** (plus GravityManager's two). Level nodes are built in code, so their paths would be fragile; an autoload's path never changes.
+- **Puppets use the host's rig type** (sent with start_level), so snapshot part lists always line up, even when a client's own quality setting is "simple ragdoll".
+- **Network ids for props = build order.** Every peer builds the level from the same data in the same order, so nothing has to be negotiated.
+- **"Back to Lobby" after a level** returns everyone to the lobby screen. The hub is also playable online, as a lobby level choice.
+- **The fake remote bot** feeds its input through the real packet encoder and the simulated lag and loss queue, so one phone can test the network path.

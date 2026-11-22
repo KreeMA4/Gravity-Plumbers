@@ -78,3 +78,19 @@ Main menu → Debug rooms → **Plumbing Workshop**.
   - [ ] The results screen shows 1-3 stars. **Back to Hub** returns to the hub.
 - [ ] Reopen the console: the bathroom shows your stars (saved). Close and restart the game: the stars are still there.
 - [ ] Bonus: find the golden duck in the bathroom (hint: near the ceiling cabinet).
+
+## M7: Networking
+You need 2 phones on the same Wi-Fi, or 1 phone and the test bot.
+- [ ] **Host:** Main menu → Host Game → HOST tab → Start Hosting. The lobby shows a room code, your local IP and a UPnP message.
+- [ ] **Join (phone 2):** Main menu → Join Game. The host's room appears under "Games nearby" within about 2 s. Tap it. The joiner lands in the lobby and both phones list both plumbers, with 3D previews behind the lists.
+- [ ] Join by typing the room code instead, in lowercase with no dash: it still works.
+- [ ] Joiner taps I'M READY. The host's START button lights up. Start: both phones load the level.
+- [ ] Both plumbers move smoothly on both screens. The joiner's controls feel slightly delayed (expected, see NETWORK.md).
+- [ ] Grab each other, carry crates, tape leaks: the progress shows on both phones, and the sludge meter, timer and order list match.
+- [ ] Gravity switch: the warning and the shift happen on both phones at the same time.
+- [ ] The joiner leaves (pause → Quit): the host sees "X left the station." and their plumber disappears.
+- [ ] The host quits: the joiner returns to the menu with "The host left the game."
+- [ ] **Hotspot:** the host turns on the phone hotspot, phone 2 joins it, and you join with the code.
+- [ ] **One phone:** in the lobby tap "+ Test bot", set Lag 250ms / Loss 5%, and Start. A bot plumber wanders around the level.
+- [ ] Debug overlay (three-finger tap): ping and KB/s are shown, with under about 40 KB/s down on the client.
+- [ ] Mid-level join: start a level, then join from phone 2. They appear at a spawn pad.

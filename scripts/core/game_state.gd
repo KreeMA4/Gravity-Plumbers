@@ -18,6 +18,8 @@ const SCREENS: Dictionary = {
 	"playground": "res://scripts/levels/ragdoll_playground.gd",
 	"game": "res://scripts/levels/level_runner.gd",
 	"results": "res://scripts/ui/results_screen.gd",
+	"host_join": "res://scripts/ui/host_join_menu.gd",
+	"lobby": "res://scripts/ui/lobby_screen.gd",
 }
 
 var difficulty: int = 1                 ## 0 Chill, 1 Normal, 2 Chaos.

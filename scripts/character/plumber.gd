@@ -81,6 +81,7 @@ var flush_count: int = 0
 var grab_time_total: float = 0.0     ## for the silly end-of-level awards
 var ragdoll_count: int = 0
 
+var puppet_velocity: Vector3 = Vector3.ZERO
 var _coyote: float = 0.0
 var _jump_buffer: float = 0.0
 var _jump_hold: float = 0.0
@@ -105,7 +106,8 @@ func setup(xform: Transform3D, plumber_look: PlumberLook, peer: int, index: int)
 func _ready() -> void:
 	add_to_group("plumbers")
 	global_transform = spawn_transform
-	simple_rig = Quality.simple_ragdoll
+	# Network clients build puppets with the HOST's rig type so poses line up.
+	simple_rig = NetManager.puppet_simple_rig if NetManager.is_client() else Quality.simple_ragdoll
 	height_scale = PlumberLook.build_scales(look.get_v("build")).x
 	var rig: Dictionary = RagdollBuilder.build(self, look, simple_rig)
 	bodies = rig["bodies"]
@@ -172,7 +174,30 @@ func get_hand_position(side: String) -> Vector3:
 
 
 func get_velocity() -> Vector3:
+	if is_puppet:
+		return puppet_velocity
 	return pelvis.linear_velocity if is_instance_valid(pelvis) else Vector3.ZERO
+
+
+## Network clients: copy the host's view of this plumber (for face, camera, HUD).
+func apply_puppet_state(new_state: int, flags: int, up: Vector3, vel: Vector3) -> void:
+	var s: State = clampi(new_state, 0, 3) as State
+	if s != state:
+		state = s
+		state_time = 0.0
+		state_changed.emit(int(s))
+	visible = s != State.FLUSHED
+	boots_on = (flags & SnapshotSync.F_BOOTS_ON) != 0
+	boots_active = (flags & SnapshotSync.F_BOOTS_ACTIVE) != 0
+	celebrate_time = 1.0 if (flags & SnapshotSync.F_CELEBRATE) != 0 else 0.0
+	if (flags & SnapshotSync.F_EMOTE) != 0:
+		emote_time = 1.0
+		emote_id = (flags >> 4) & 7
+	else:
+		emote_time = 0.0
+	if up.is_finite() and up.length_squared() > 0.5:
+		local_up = up.normalized()
+	puppet_velocity = vel
 
 
 func is_ragdoll() -> bool:

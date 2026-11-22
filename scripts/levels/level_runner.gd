@@ -90,9 +90,8 @@ func _ready() -> void:
 	add_child(pause_menu)
 	pause_menu.closed.connect(func() -> void: local_player.set_blocked(false))
 	local_player.touch.pause_pressed.connect(open_pause)
-	for i: int in NetManager.get_player_ids().size():
-		var pid: int = int(NetManager.get_player_ids()[i])
-		spawn_plumber(pid, i)
+	for pid: Variant in NetManager.get_player_ids():
+		spawn_plumber(int(pid), NetManager.get_player_index(int(pid)))
 	_attach_local()
 	Quality.set_watchdog(true)
 	Quality.low_fps_detected.connect(_on_low_fps)
@@ -243,7 +242,7 @@ func _on_object_completed(obj_id: String) -> void:
 	if not multiplayer.is_server():
 		return
 	orders.target_done(obj_id)
-	_sync_state_now()
+	NetManager.send_level_state(get_level_state(), true)
 
 
 func _on_order_activated(w: WorkOrder) -> void:

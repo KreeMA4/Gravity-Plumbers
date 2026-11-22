@@ -191,6 +191,8 @@ COMMON_MEMBERS = {
     "process_mode", "set_process", "set_physics_process", "is_inside_tree", "get_children",
     "get_viewport", "create_tween", "get_path", "has_node", "remove_child", "call_deferred",
     "set_deferred", "is_queued_for_deletion", "add_to_group", "get_instance_id", "tr",
+    "get_node_or_null", "find_child", "set_meta", "get_meta", "has_meta", "remove_meta",
+    "is_in_group", "remove_from_group", "get_index", "move_child", "propagate_call",
 }
 
 

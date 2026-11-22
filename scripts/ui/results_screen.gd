@@ -68,7 +68,11 @@ func _ready() -> void:
 	if can_choose and LevelCatalog.exists("hub"):
 		var hub: Button = UITheme.big_button("Back to Hub" if not NetManager.is_online() else "Back to Lobby")
 		hub.custom_minimum_size = Vector2(340, 116)
-		hub.pressed.connect(func() -> void: NetManager.host_start_level("hub"))
+		hub.pressed.connect(func() -> void:
+			if NetManager.is_online():
+				NetManager.goto_lobby()
+			else:
+				NetManager.host_start_level("hub"))
 		row.add_child(hub)
 	elif not can_choose:
 		row.add_child(UITheme.label("Waiting for the host...", 30))

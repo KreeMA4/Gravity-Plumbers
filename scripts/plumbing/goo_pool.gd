@@ -105,3 +105,32 @@ func get_active() -> Array:
 		var b: RigidBody3D = rb as RigidBody3D
 		out.append([int(b.get_meta("goo_index")), b.global_position])
 	return out
+
+
+# --- Network clients: blobs are just shown where the host says ---------------
+
+func client_show(index: int, pos: Vector3) -> void:
+	if index < 0 or index >= blobs.size() or not pos.is_finite():
+		return
+	var rb: RigidBody3D = blobs[index] as RigidBody3D
+	if _free.has(rb):
+		_free.erase(rb)
+		rb.freeze_mode = RigidBody3D.FREEZE_MODE_KINEMATIC
+		rb.freeze = true
+		rb.process_mode = Node.PROCESS_MODE_INHERIT
+		rb.visible = true
+		rb.global_position = pos
+		rb.reset_physics_interpolation()
+	else:
+		rb.global_position = pos
+
+
+func client_hide_except(seen: Dictionary) -> void:
+	for i: int in blobs.size():
+		if seen.has(i):
+			continue
+		var rb: RigidBody3D = blobs[i] as RigidBody3D
+		if not _free.has(rb):
+			rb.visible = false
+			rb.process_mode = Node.PROCESS_MODE_DISABLED
+			_free.append(rb)

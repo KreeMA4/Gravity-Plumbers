@@ -12,6 +12,9 @@ var _grab_time: float = 0.0
 var _jump_time: float = 0.0
 var _flop_time: float = 0.0
 var frame: PlumberInput = PlumberInput.new()
+## Optional: send the encoded input here instead of driving the plumber
+## directly (NetManager's "fake remote player" uses this to test the network path).
+var route_input: Callable = Callable()
 
 
 func _ready() -> void:
@@ -46,5 +49,7 @@ func _physics_process(dt: float) -> void:
 	frame.move = Vector2(0, 0.8)
 	frame.aim = _dir if _dir.length_squared() > 0.5 else plumber.facing
 	frame.buttons = bits
-	if not plumber.is_puppet:
+	if route_input.is_valid():
+		route_input.call(frame.to_bytes())
+	elif not plumber.is_puppet:
 		plumber.input.copy_from(frame)
