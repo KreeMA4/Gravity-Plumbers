@@ -19,8 +19,9 @@ extends RefCounted
 
 enum Kind { NONE, PICKUP, DROP, USE_OBJECT }
 
-## Close items count even slightly behind you (you're standing on them).
-const CLOSE_RANGE: float = 0.75
+## Items this close horizontally count in any direction (you're standing on them).
+## Measured flat, because distances are taken from the pelvis, ~0.9 m above the floor.
+const CLOSE_RANGE: float = 0.45
 ## Interactables keep their old, generous "anywhere around you" rule.
 const OBJECT_RANGE: float = 1.8
 
@@ -63,7 +64,7 @@ static func score_candidate(from: Vector3, look: Vector3, target: Vector3, up: V
 	var dot: float = 1.0
 	if flat.length() > 0.05 and look.length() > 0.001:
 		dot = look.normalized().dot(flat.normalized())
-	if dot < min_dot and d > CLOSE_RANGE:
+	if dot < min_dot and flat.length() > CLOSE_RANGE:
 		return -1.0
 	return clampf(dot, 0.0, 1.0) * 0.65 + (1.0 - d / maxf(max_range, 0.01)) * 0.35
 
