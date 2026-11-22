@@ -8,9 +8,9 @@ extends Node
 ## See docs/TUNING.md for advice on which knobs to turn first.
 
 # --- Build info --------------------------------------------------------------
-var GAME_VERSION: String = "0.2.0"     ## Shown in menus and checked on join.
+var GAME_VERSION: String = "0.3.0"     ## Shown in menus and checked on join.
 var PROTOCOL_VERSION: int = 3           ## Bump when network messages change.
-var MILESTONE_ID: String = "M2"        ## Shown in the debug overlay.
+var MILESTONE_ID: String = "M3"        ## Shown in the debug overlay.
 
 # --- Gravity -----------------------------------------------------------------
 var GRAVITY_STRENGTH: float = 9.8       ## m/s^2 of normal station gravity.
@@ -43,7 +43,7 @@ var JOINT_KD: float = 32.0              ## Damping on each joint (too low = jitt
 var JOINT_MAX_ANG_ACCEL: float = 900.0  ## Clamp on joint correction (rad/s^2) so nothing explodes.
 var UPRIGHT_KP: float = 260.0           ## How hard chest and pelvis turn to stay upright.
 var UPRIGHT_KD: float = 26.0
-var TURN_KP: float = 120.0              ## How fast the body turns to face where it walks.
+var TURN_RATE: float = 9.0              ## How fast the body turns to face where it walks (1/s).
 var RIDE_HEIGHT: float = 0.86           ## Pelvis height above the floor while standing.
 var RIDE_SPRING: float = 140.0          ## Spring holding the pelvis at ride height.
 var RIDE_DAMP: float = 18.0

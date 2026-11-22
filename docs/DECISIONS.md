@@ -11,3 +11,10 @@ One line per decision: what was decided, and why.
 - **Physics interpolation is on.** Cameras update in `_process` from `get_global_transform_interpolated()` and have interpolation turned off themselves. Teleports call `reset_physics_interpolation()`.
 - **Only the latest milestone zip is kept** in `dist/`, so the git history doesn't fill up with copies.
 - **Window:** 1920x1080 base with `canvas_items` stretch and `expand` aspect, so UI sizes are in "1080p pixels" and layouts widen for 21:9 screens. Orientation is sensor-landscape.
+- **"11 bodies"** means pelvis, chest, head, 2 upper arms, 2 forearm+hand, 2 thighs and 2 shin+foot, as the brief lists them. The simple rig (7 bodies) merges each whole arm and each whole leg.
+- **Muscles change angular velocity directly** (a velocity-based PD controller) instead of applying torques. Why: it doesn't depend on mass or inertia, so light and heavy limbs tune the same and the rig is much harder to explode. A fraction of the change is pushed back into the parent body.
+- **A hover spring on the pelvis does the standing**, with the legs mostly animating. This is the standard trick that makes active ragdolls controllable. A ray from the pelvis along -local up stands in for the "foot rays".
+- **No self-collision inside one plumber.** Every pair of parts gets a collision exception, for stability.
+- **The mustache is cosmetic springs, not physics bodies.** It looks the same, costs nothing and never needs syncing.
+- **Grab hands landed in M3** (the brief has them in M4), because bracing during gravity shifts needs them. M4 adds the tools.
+- **Touch controls take touches in `_input`.** The top 16% of the screen is left alone so HUD buttons stay tappable.

@@ -26,3 +26,16 @@ Tick these off on your phone after each milestone. If anything fails, copy the r
 - [ ] The goo blobs wobble and glow lime and purple.
 - [ ] The debug overlay shows fewer than 250 draw calls in this room.
 - [ ] Nothing renders inside-out. If pipes look hollow or the outlines cover whole objects, report it: the triangle winding is wrong.
+
+## M3: Ragdoll plumber
+- [ ] Debug rooms → **Ragdoll Playground**: a chunky plumber with big googly eyes and a mustache stands on the floor.
+- [ ] The left thumb moves (a joystick appears under it). The legs swing in a walk cycle and the arms swing opposite.
+- [ ] Dragging on the right half orbits the camera. After a second of walking, it settles back behind you.
+- [ ] **JUMP** jumps. Holding it jumps slightly higher. Walking off the stairs and jumping right away still works (coyote time).
+- [ ] **FLOP** makes the plumber go limp. After about 1-2 seconds it wobbles back up by itself. **UP!** speeds this up.
+- [ ] Tap **Gravity** (top bar): the plumber tumbles (unbraced), the camera rolls smoothly, and they get up on the new floor.
+- [ ] **BOOTS** then **Gravity**: the plumber stays stuck to the floor (braced), and the HUD ring shows the boot charge draining.
+- [ ] Hold **GRAB L/R** near a crate: the arm reaches where you look, then grabs and carries the crate. Let go mid-swing to throw it.
+- [ ] Hold GRAB on the grey bar at chest height while gravity flips: you hang on (braced).
+- [ ] **+ Bots** spawns 3 wandering plumbers. The debug overlay should still show 60 FPS on a mid-range phone.
+- [ ] Walk off into space if you can (through a window gap, or with gravity pointing at the window): you get flushed and respawn after 3 s.
