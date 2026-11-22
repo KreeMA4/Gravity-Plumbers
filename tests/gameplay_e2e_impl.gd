@@ -22,6 +22,7 @@ var touch: TouchControls
 var plumber: Plumber
 var arena: Node3D
 var items: Node3D
+var quiet_legs: bool = false
 
 
 func _ready() -> void:
@@ -518,7 +519,7 @@ func _measure_gait(k: float, n: int) -> Dictionary:
 	Input.action_press("move_forward", k)
 	for i: int in n:
 		await frames(1)
-		if i % 30 == 15:
+		if i % 30 == 15 and not quiet_legs:
 			leg_report("k=%.1f f%d" % [k, i])
 		if i < 45:
 			continue   # let it get going
@@ -557,7 +558,60 @@ func _measure_gait(k: float, n: int) -> Dictionary:
 		"bob": hmax - hmin, "vmax": vmax, "dist": dist, "knee_bend": knee_max - knee_min, "knee_deepest": knee_min}
 
 
+## Tuning sweep (diagnostic, no pass/fail): walk under several leg-control
+## settings and print tilt / contact / skating / step rate for each.
+func _sweep() -> void:
+	var defaults: Array = [Tuning.LEG_STRENGTH_ON_FEET, Tuning.LEG_FEED_FORWARD, Tuning.HIPS_UPRIGHT_FRAME,
+		Tuning.STANCE_PRESS, Tuning.UPRIGHT_KP, Tuning.STANCE_FOOT_FRICTION]
+	var configs: Array = [
+		["current", 2.6, true, true, 0.02, 260.0, 0.25],
+		["boost1", 1.0, true, true, 0.02, 260.0, 0.25],
+		["boost1_noFF", 1.0, false, true, 0.02, 260.0, 0.25],
+		["boost1_noFF_pelvisHips", 1.0, false, false, 0.02, 260.0, 0.25],
+		["boost1_noFF_pelvisHips_nopress", 1.0, false, false, 0.0, 260.0, 0.25],
+		["current_upright700", 2.6, true, true, 0.02, 700.0, 0.25],
+		["boost1.6_upright700", 1.6, true, true, 0.02, 700.0, 0.25],
+		["boost1.6_upright700_nopress", 1.6, true, true, 0.0, 700.0, 0.25],
+		["boost1_upright700_pelvisHips", 1.0, true, false, 0.0, 700.0, 0.25],
+	]
+	quiet_legs = true
+	for c: Variant in configs:
+		var cfg: Array = c as Array
+		Tuning.LEG_STRENGTH_ON_FEET = float(cfg[1])
+		Tuning.LEG_FEED_FORWARD = bool(cfg[2])
+		Tuning.HIPS_UPRIGHT_FRAME = bool(cfg[3])
+		Tuning.STANCE_PRESS = float(cfg[4])
+		Tuning.UPRIGHT_KP = float(cfg[5])
+		Tuning.STANCE_FOOT_FRICTION = float(cfg[6])
+		await place(Vector3(0, 0.05, 0) - fwd() * 12.0, 60)
+		var tilt_sum: float = 0.0
+		var tilt_n: int = 0
+		Input.action_press("move_forward", 0.6)
+		for i: int in 60:
+			await frames(1)
+		Input.action_release("move_forward")
+		var m: Dictionary = await _measure_gait(0.6, 150)
+		# tilt sampled after the gait measurement keeps moving for a moment
+		Input.action_press("move_forward", 0.6)
+		for i: int in 40:
+			await frames(1)
+			tilt_sum += rad_to_deg(plumber.pelvis.global_basis.y.normalized().angle_to(plumber.local_up))
+			tilt_n += 1
+		Input.action_release("move_forward")
+		print("  info  sweep %-32s tilt %5.1f deg | contact %3.0f%% skate %3.0f%% steps/s %.1f knee_range %.2f vmax %.1f" % [str(cfg[0]),
+			tilt_sum / maxf(1.0, tilt_n), 100.0 * float(m["contact"]), 100.0 * float(m["skate"]), float(m["steps_per_s"]), float(m["knee_bend"]), float(m["vmax"])])
+		await frames(30)
+	quiet_legs = false
+	Tuning.LEG_STRENGTH_ON_FEET = float(defaults[0])
+	Tuning.LEG_FEED_FORWARD = bool(defaults[1])
+	Tuning.HIPS_UPRIGHT_FRAME = bool(defaults[2])
+	Tuning.STANCE_PRESS = float(defaults[3])
+	Tuning.UPRIGHT_KP = float(defaults[4])
+	Tuning.STANCE_FOOT_FRICTION = float(defaults[5])
+
+
 func _check_walk() -> void:
+	await _sweep()
 	await clear_items()
 	await place(Vector3(0, 0.05, 0) - fwd() * 12.0, 60)
 	# Idle first: standing with both feet down, legs settled.

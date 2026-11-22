@@ -875,7 +875,9 @@ func _update_limb_targets(dt: float) -> void:
 		var llc: LimbController = limbs.get(role) as LimbController
 		if llc != null:
 			llc.boost = leg_boost
-	_hips_in_world(on_feet)
+			llc.feed_forward = Tuning.LEG_FEED_FORWARD
+	var hips_world: bool = on_feet and Tuning.HIPS_UPRIGHT_FRAME
+	_hips_in_world(hips_world)
 	if on_feet:
 		var floor_h: float = pelvis.global_position.dot(up) - ground_dist
 		for side: String in ["l", "r"]:
@@ -894,9 +896,12 @@ func _update_limb_targets(dt: float) -> void:
 				ik = Vector2(atan2(-foot.z, sag_down), 0.0)   # one-piece legs can't bend
 			else:
 				ik = Gait.leg_ik(-foot.z, sag_down, _leg_l1, _leg_l2)
+			var hq: Quaternion = Quaternion(Vector3.BACK, abd) * Quaternion(Vector3.RIGHT, ik.x)
 			var hlc: LimbController = limbs.get("hip_" + side) as LimbController
-			if hlc != null:
-				hlc.target_world = upq * Quaternion(Vector3.BACK, abd) * Quaternion(Vector3.RIGHT, ik.x)
+			if hlc != null and hips_world:
+				hlc.target_world = upq * hq
+			else:
+				_set_target("hip_" + side, hq)
 			_set_target("knee_" + side, Quaternion(Vector3.RIGHT, ik.y))
 	elif in_zero_g:
 		var drift: float = sin(state_time * 1.6) * 0.15

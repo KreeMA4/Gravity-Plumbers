@@ -346,5 +346,5 @@ jobs:
           ls ci_screens/*.png > /dev/null 2>&1 && python3 tools/ci/thumbs.py ci_screens/*.png || echo "no screenshots"
           # Test summaries last, so the end of the log has everything needed to debug.
           for f in ci_logs/touch_e2e.log ci_logs/gameplay_e2e.log; do
-            [ -f "$f" ] && grep -E "^  (FAIL|info)|E2E: [0-9]+ checks" "$f" | sed "s|^|$(basename $f): |" | tail -60 || true
+            [ -f "$f" ] && grep -E "^  (FAIL|info)|E2E: [0-9]+ checks" "$f" | sed "s|^|$(basename $f): |" | tail -90 || true
           done
