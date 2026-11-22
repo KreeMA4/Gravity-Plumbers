@@ -67,7 +67,6 @@ How to check on your phone: import the project, press Play, and check that the m
 ## Known issues
 - **Gameplay feel and touch input are unverified.** Godot now runs every screen and level in CI with zero errors, but nobody has played it with fingers yet. Ragdoll feel, touch controls, real networking between phones, and performance on a phone still need testing on a device.
 - **Client latency:** clients feel about 2 × ping + 100 ms on their own plumber (pure host authority). Fine on LAN and hotspots. See NETWORK.md.
-- **Joint hinge angle signs under Jolt are a guess.** If knees or elbows bend backwards, flip the limits in `ragdoll_builder.gd` (see TUNING.md).
 - **Level coordinates were placed by hand without play-testing**, so some objects may need nudging.
 - **Look changes from the hub mirror apply from the next level** (the current plumber isn't rebuilt live).
 - **Translation:** only English. Strings are collected in `assets/lang/strings.csv`, but no translation is registered in Project Settings yet.

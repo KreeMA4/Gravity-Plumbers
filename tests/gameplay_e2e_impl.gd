@@ -476,6 +476,8 @@ func _measure_gait(k: float, n: int) -> Dictionary:
 	var hmax: float = -99.0
 	var vmax: float = 0.0
 	var samples: int = 0
+	var knee_min: float = 9.0
+	var knee_max: float = -9.0
 	Input.action_press("move_forward", k)
 	for i: int in n:
 		await frames(1)
@@ -504,6 +506,9 @@ func _measure_gait(k: float, n: int) -> Dictionary:
 			sv.y = 0.0
 			skate_sum += sv.length() / vh.length()
 			skate_n += 1
+		var kn: float = joint_angle("shin_l", "thigh_l")
+		knee_min = minf(knee_min, kn)
+		knee_max = maxf(knee_max, kn)
 		var h: float = plumber.pelvis.global_position.y
 		hmin = minf(hmin, h)
 		hmax = maxf(hmax, h)
@@ -512,7 +517,7 @@ func _measure_gait(k: float, n: int) -> Dictionary:
 	var secs: float = float(samples) / float(Engine.physics_ticks_per_second)
 	return {"contact": float(contact) / maxf(1.0, samples), "air": float(airborne) / maxf(1.0, samples),
 		"steps_per_s": float(flips) / maxf(secs, 0.01), "skate": skate_sum / maxf(1.0, skate_n),
-		"bob": hmax - hmin, "vmax": vmax, "dist": dist}
+		"bob": hmax - hmin, "vmax": vmax, "dist": dist, "knee_bend": knee_max - knee_min, "knee_deepest": knee_min}
 
 
 func _check_walk() -> void:
@@ -523,11 +528,16 @@ func _check_walk() -> void:
 	ok(sole_clearance("l") < 0.06 and sole_clearance("r") < 0.06, "idle: both feet on the ground (%.3f, %.3f m)" % [sole_clearance("l"), sole_clearance("r")])
 	ok(plumber.gait_amount < 0.05, "idle: no walk cycle while standing (%.2f)" % plumber.gait_amount)
 	leg_report("idle")
+	if plumber.limbs.has("knee_l"):
+		var qk: Quaternion = (plumber.limbs["knee_l"] as LimbController).target
+		var tk: float = 2.0 * atan2(qk.x, qk.w)
+		ok(absf(joint_angle("shin_l", "thigh_l") - tk) < 0.12, "idle: the knee joint actually follows its muscle target (%.2f vs %.2f)" % [joint_angle("shin_l", "thigh_l"), tk])
 	await screenshot("anim_idle")
 	# Stick 0.6 = 0.4 of top speed after the 0.25 input deadzone (~1.8 m/s, a walk).
 	var m: Dictionary = await _measure_gait(0.6, 210)
 	print("  info  walk: %s" % str(m))
 	ok(float(m["dist"]) > 2.0, "walk: moved forward (%.2f m)" % float(m["dist"]))
+	ok(float(m["knee_bend"]) > 0.35 and float(m["knee_deepest"]) < -0.3, "walk: knees bend and straighten through the step (range %.2f rad, deepest %.2f)" % [float(m["knee_bend"]), float(m["knee_deepest"])])
 	ok(float(m["contact"]) > 0.9, "walk: a foot is on the ground %.0f%% of the time (no floating)" % (100.0 * float(m["contact"])))
 	ok(float(m["skate"]) < 0.5, "walk: planted foot doesn't skate (sole speed %.0f%% of body speed)" % (100.0 * float(m["skate"])))
 	ok(float(m["steps_per_s"]) > 1.2, "walk: left and right feet alternate (%.1f steps/s)" % float(m["steps_per_s"]))

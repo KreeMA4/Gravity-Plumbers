@@ -15,6 +15,13 @@ extends RefCounted
 ##    along the bone.
 ##  - HingeJoint3D hinges around the joint's local Z axis, so we point Z
 ##    along the body's left-right axis.
+##  - MEASURED (gameplay E2E, Jolt): the hinge's own angle runs OPPOSITE to the
+##    muscles' rotation about +X (LimbController targets). So a knee that the
+##    muscles bend with a NEGATIVE X rotation needs hinge limits [-0.1, +2.4],
+##    and an elbow bent with a POSITIVE X rotation needs [-2.5, +0.15]. (The
+##    old limits had the signs the other way round: knees and elbows could only
+##    bend the wrong way and were pinned straight at the +0.1 stop, which is a
+##    big part of why the walk looked stiff and floaty.)
 ##  - node_a = parent body, node_b = child body. Both bodies are placed BEFORE
 ##    the joint gets its node paths, because the joint remembers their relative
 ##    positions at that moment.
@@ -89,8 +96,9 @@ static func build(root: Node3D, look: PlumberLook, simple: bool) -> Dictionary:
 				Tuning.PLUMBER_MASS_LIMB, [_capsule(arm_r * 0.92, lo_len, Vector3.ZERO), _sphere(0.08 * ls, Vector3(0, -lo_len * 0.5 - 0.02, 0))],
 				Tuning.BODY_FRICTION, true)
 			_cone(root, out, "chest", "upper_arm_" + side, Vector3(sx * arm_x, shoulder_y, 0), Vector3.DOWN, 2.4, 1.0)
-			# Elbow: hinge around the left-right (X) axis; positive bends the forearm forward.
-			_hinge(root, out, "upper_arm_" + side, "lower_arm_" + side, Vector3(sx * arm_x, elbow_y, 0), Vector3.RIGHT, -0.15, 2.5)
+			# Elbow: hinge around the left-right (X) axis; the muscles bend the forearm
+			# forward with a positive X rotation (= negative hinge angle, see notes above).
+			_hinge(root, out, "upper_arm_" + side, "lower_arm_" + side, Vector3(sx * arm_x, elbow_y, 0), Vector3.RIGHT, -2.5, 0.15)
 			out["limbs"]["shoulder_" + side] = ["upper_arm_" + side, "chest", 1.0]
 			out["limbs"]["elbow_" + side] = ["lower_arm_" + side, "upper_arm_" + side, 0.8]
 			out["hand_" + side] = ["lower_arm_" + side, Vector3(0, -lo_len * 0.5 - 0.05, 0)]
@@ -105,8 +113,9 @@ static func build(root: Node3D, look: PlumberLook, simple: bool) -> Dictionary:
 				_box(Vector3(0.13 * ws, 0.08, 0.26), Vector3(0, -sh_len * 0.5 - 0.03, -0.05))],
 				Tuning.FOOT_FRICTION)
 			_cone(root, out, "pelvis", "thigh_" + side, Vector3(sx * leg_x, hip_y, 0), Vector3.DOWN, 1.6, 0.4)
-			# Knee: negative bends the shin backward (like a real knee).
-			_hinge(root, out, "thigh_" + side, "shin_" + side, Vector3(sx * leg_x, knee_y, 0), Vector3.RIGHT, -2.4, 0.1)
+			# Knee: the muscles bend the shin backward with a negative X rotation
+			# (= positive hinge angle, see notes above), like a real knee.
+			_hinge(root, out, "thigh_" + side, "shin_" + side, Vector3(sx * leg_x, knee_y, 0), Vector3.RIGHT, -0.1, 2.4)
 			out["limbs"]["hip_" + side] = ["thigh_" + side, "pelvis", 1.3]
 			out["limbs"]["knee_" + side] = ["shin_" + side, "thigh_" + side, 1.0]
 			out["foot_" + side] = "shin_" + side

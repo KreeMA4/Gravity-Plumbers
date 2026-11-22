@@ -29,7 +29,7 @@ Every number lives in `scripts/core/tuning.gd`, with a comment on each one. Chan
 `CAMERA_DISTANCE`, `CAMERA_UP_FOLLOW_TIME` (how fast the world rolls during a shift), `CAMERA_RAGDOLL_SMOOTH`, `CAMERA_RECENTER_SPEED` (0 turns auto-recenter off), `LOOK_SENSITIVITY`.
 
 ## Joint limits (in `ragdoll_builder.gd`)
-Elbows use hinge limits `-0.15..2.5` and knees `-2.4..0.1` (radians). If, on your device, elbows or knees bend the wrong way, swap the signs of those two pairs. The hinge angle sign in Jolt is UNVERIFIED (see STATUS.md).
+Elbows use hinge limits `-2.5..0.15` and knees `-0.1..2.4` (radians). These were MEASURED in CI (gameplay E2E): Jolt's hinge angle runs opposite to the muscles' rotation about +X, so the earlier limits (`-0.15..2.5`, `-2.4..0.1`) pinned knees and elbows straight. The E2E test now checks that the knee follows its muscle target and bends through each step.
 
 ## Gameplay pacing
 - `LEAK_SLUDGE_RATE`, `CLOG_SLUDGE_RATE`, `SLUDGE_FIX_REWARD`: how fast the station floods.
