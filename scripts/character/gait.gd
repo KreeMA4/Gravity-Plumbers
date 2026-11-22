@@ -53,7 +53,7 @@ static func cadence(speed: float, height_scale: float) -> float:
 
 ## Swing foot lift (m).
 static func lift_height(run: float, height_scale: float) -> float:
-	return lerpf(0.08, 0.15, run) * height_scale
+	return lerpf(0.06, 0.12, run) * height_scale
 
 
 ## Where one foot is in its cycle. phase in radians (one cycle = TAU).

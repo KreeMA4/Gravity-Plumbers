@@ -474,7 +474,10 @@ func leg_report(tag: String) -> void:
 	var t_hip: float = 0.0
 	var t_knee: float = 0.0
 	if plumber.limbs.has("hip_l"):
-		var qh: Quaternion = (plumber.limbs["hip_l"] as LimbController).target
+		var hl: LimbController = plumber.limbs["hip_l"] as LimbController
+		var qh: Quaternion = hl.target
+		if hl.use_world:   # walking: hip target is in the upright frame; show it relative to the pelvis
+			qh = plumber.pelvis.global_basis.get_rotation_quaternion().inverse() * hl.target_world
 		t_hip = 2.0 * atan2(qh.x, qh.w)
 	if plumber.limbs.has("knee_l"):
 		var qk: Quaternion = (plumber.limbs["knee_l"] as LimbController).target

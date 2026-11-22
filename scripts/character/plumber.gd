@@ -153,6 +153,11 @@ func _ready() -> void:
 	for role: String in ["hip_l", "hip_r", "knee_l", "knee_r"]:
 		if limbs.has(role):
 			(limbs[role] as LimbController).feed_forward = true
+	for role: String in ["hip_l", "hip_r"]:
+		if limbs.has(role):
+			# Leg swings must not pitch the pelvis forward (that tipped the whole body
+			# over while walking); the upright controller alone keeps the pelvis level.
+			(limbs[role] as LimbController).reaction = 0.0
 	for side: String in ["l", "r"]:
 		var h: Array = rig["hand_" + side]
 		hand_bodies[side] = bodies[str(h[0])]
@@ -827,8 +832,11 @@ func _update_limb_targets(dt: float) -> void:
 		walk_phase = fposmod(walk_phase + TAU * Gait.cadence(speed, height_scale) * dt, TAU * 64.0)
 	_land_t = maxf(0.0, _land_t - dt)
 	var squash: float = land_squash * (_land_t / 0.3)
-	# Stride direction in the pelvis frame (feet step the way you actually move).
-	var pinv: Basis = pelvis.global_basis.orthonormalized().inverse()
+	# Leg targets live in the UPRIGHT walking frame (local up + facing), not the
+	# actual pelvis: if the pelvis wobbles, the feet still go where they should.
+	var upq: Quaternion = _target_basis(up, facing).get_rotation_quaternion()
+	var pinv: Basis = Basis(upq).inverse()
+	# Stride direction in that frame (feet step the way you actually move).
 	var dir_l: Vector3 = pinv * v_h
 	dir_l.y = 0.0
 	var dir2: Vector3 = dir_l.normalized() if dir_l.length() > 0.05 else Vector3.FORWARD
@@ -856,12 +864,17 @@ func _update_limb_targets(dt: float) -> void:
 		var llc: LimbController = limbs.get(role) as LimbController
 		if llc != null:
 			llc.boost = leg_boost
+	_hips_in_world(on_feet)
 	if on_feet:
-		var hip_above: float = ground_dist + (_hip_off["l"] as Vector3).y
+		var floor_h: float = pelvis.global_position.dot(up) - ground_dist
 		for side: String in ["l", "r"]:
 			var fc2: Vector2 = cyc[side]
-			# Foot target relative to the hip joint (pelvis frame: +x right, +y up, -z forward).
-			var foot: Vector3 = dir2 * (fc2.x * half) + Vector3(0, -hip_above + fc2.y * lift_h, 0)
+			var hip_above: float = (pelvis.global_transform * (_hip_off[side] as Vector3)).dot(up) - floor_h
+			# A planted foot aims a little below the floor so it really presses on it
+			# (carries weight, grips) instead of hovering on a target exactly at floor level.
+			var press: float = Tuning.STANCE_PRESS * height_scale if fc2.y <= 0.0001 else 0.0
+			# Foot target relative to the hip joint (upright frame: +x right, +y up, -z forward).
+			var foot: Vector3 = dir2 * (fc2.x * half) + Vector3(0, -hip_above - press + fc2.y * lift_h, 0)
 			var down: float = maxf(-foot.y, 0.05)
 			var abd: float = atan2(foot.x, down)
 			var sag_down: float = sqrt(foot.x * foot.x + down * down)
@@ -870,7 +883,9 @@ func _update_limb_targets(dt: float) -> void:
 				ik = Vector2(atan2(-foot.z, sag_down), 0.0)   # one-piece legs can't bend
 			else:
 				ik = Gait.leg_ik(-foot.z, sag_down, _leg_l1, _leg_l2)
-			_set_target("hip_" + side, Quaternion(Vector3.BACK, abd) * Quaternion(Vector3.RIGHT, ik.x))
+			var hlc: LimbController = limbs.get("hip_" + side) as LimbController
+			if hlc != null:
+				hlc.target_world = upq * Quaternion(Vector3.BACK, abd) * Quaternion(Vector3.RIGHT, ik.x)
 			_set_target("knee_" + side, Quaternion(Vector3.RIGHT, ik.y))
 	elif in_zero_g:
 		var drift: float = sin(state_time * 1.6) * 0.15
@@ -924,6 +939,14 @@ func _update_limb_targets(dt: float) -> void:
 			shoulder = Quaternion(Vector3.BACK, sx * (2.6 + sin(state_time * 12.0) * 0.2))
 		_set_target("shoulder_" + side, shoulder)
 		_set_target("elbow_" + side, Quaternion(Vector3.RIGHT, elbow))
+
+
+## Hips aim in the world (upright frame) while walking, relative to the pelvis otherwise.
+func _hips_in_world(on: bool) -> void:
+	for role: String in ["hip_l", "hip_r"]:
+		var lc: LimbController = limbs.get(role) as LimbController
+		if lc != null:
+			lc.use_world = on
 
 
 func _emote_pose(side: String, sx: float) -> Quaternion:
