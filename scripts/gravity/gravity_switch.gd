@@ -6,7 +6,7 @@ extends LevelObject
 ## action:
 ##   "global"     - rotate global gravity to the next direction in `dirs`
 ##   "field"      - toggle the gravity field `field_id` on/off
-##   "field_dir"  - point field `field_id` at the next direction in `dirs`
+##   "field_dir"  - switch field `field_id` ON and point it at the next direction in `dirs`
 ## two_player: needs two different plumbers to pull within 1.5 s (solo: one is enough).
 ## required_dir (optional, axis index): this switch counts as "done" for a
 ## relay work order when gravity ends up pointing that way after it's used.
@@ -125,6 +125,7 @@ func _trigger() -> void:
 				mark_done()
 		"field_dir":
 			GravityManager.set_field_direction(field_id, GravityMath.AXES[clampi(idx, 0, 5)] as Vector3)
+			GravityManager.set_field_enabled(field_id, true)
 			if required_dir < 0:
 				mark_done()
 	if action == "global" and required_dir < 0:

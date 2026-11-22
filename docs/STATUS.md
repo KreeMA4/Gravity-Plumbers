@@ -1,6 +1,6 @@
 # Status
 
-**Current milestone:** M8 (customisation)
+**Current milestone:** M9 (levels 2-5)
 
 ## Done
 - project.godot: Jolt Physics, Compatibility renderer, gravity 0, 60 Hz physics, physics interpolation, landscape, touch emulated from the mouse.
@@ -19,12 +19,14 @@
 - M6: the hub (The Rusty Pipe: job console with difficulty and stars, tool rack, practice switch and rail, a duck), Level 1 Orbital Bathroom (6 ordered work orders built around one 180° flip; tutorial prompts; ceiling spawn pad used after the flip), and saving stars, best times and ducks to user://save.json.
 - M7: NetManager (ENet host/join, version handshake, player list with looks, ready, kick, lobby info, mid-level join with catch-up sync, disconnect handling, ping, ENet traffic stats, rate-limited validated input, 20 Hz snapshots with priority and a byte budget, client interpolation and extrapolation, 5 Hz level state, reliable events, results relay, host-paused notice, fake remote bot through simulated lag and loss, `--server` / `--client=` flags), RoomCode (Crockford base32, forgiving decode; tested), LanDiscovery (UDP beacons with graceful failure), UpnpHelper (worker thread), NetUtil (private IP picking, hotspot-aware), SnapshotSync (tested), the Host/Join screen (LAN list, code, advanced IP, hotspot help, connecting overlay with cancel) and the Lobby screen (code with copy, IPs, UPnP status, player list with 3D previews, ready, kick, level and difficulty, test tools).
 - M8: the customise screen (8 category tabs, a SubViewport turntable preview with drag-spin and reaction hop, an option grid with colour swatches and locked items, a randomizer with per-category locks plus colours-only and undo, 3 outfit slots, name edit, Done), the hub mirror, your plumber idling in the menu backdrop, live outfits in the lobby, "Random on join", host-side look clamping, and look/randomizer unit tests.
+- M9: Level 2 Zero-G Cafeteria (zero-G dining zone, floating food and canisters, G-Wrench intro, two-player valve, plunger anchoring), Level 3 Asteroid Waterworks (two planetoids with sphere gravity, pipes wrapped round the rock, a zero-G gap with a bridge-pipe puzzle), Level 4 Spin-Cycle Habitat (scheduled gravity cycle floor→wall→ceiling→wall, jobs on every wall, relay switch), Level 5 Reactor Plumbing Panic (3 rooms, storms every 40 s, two coordinated room switches that turn on and aim the reactor field, vents, and THE GREAT CLOG boss fed with goo), Spinner decorations, difficulty scaling, and mid-level join.
 
 ## UNVERIFIED
 **No Godot binary was run in the build environment** (running the downloaded editor was blocked). Everything below passed static checks only (`gdtoolkit` parse and `tools/validate_project.py`):
 - That the project opens in Godot 4.6 with zero errors and zero warnings.
 - That `tests/run_all.gd` passes.
 - That the menu renders correctly at 1920x1080 and 2400x1080.
+- M9: level layouts are hand-placed by coordinates and untested in play. Some objects may sit slightly inside walls or be awkward to reach; nudge positions in `scripts/levels/level_data/*.gd`. Overlapping sphere fields between the two asteroids are blended (equal priority), so they make a weak "saddle" zone.
 - M8: SubViewport preview sizing in the Compatibility renderer; how comfortable "hold to save" outfit slots are to use.
 - M7: everything over a real network: LAN broadcast on Android (multicast lock), hotspot routing, UPnP on real routers, and how interpolation feels at 20 Hz. ENet statistics may report 0 on some platforms.
 - M6: whether Level 1's ceiling leak and valve are comfortable to reach while standing upside down (they may need moving a little lower in `orbital_bathroom.gd`).

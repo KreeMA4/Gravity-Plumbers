@@ -274,6 +274,22 @@ static func _build_objects(runner: LevelRunner, world: Node3D, d: Dictionary) ->
 		world.add_child(vt)
 		runner.register_object(vt)
 		i += 1
+	for e: Variant in d.get("great_clogs", []):
+		var od: Dictionary = e as Dictionary
+		var gc: GreatClog = GreatClog.new()
+		_place(gc, od, "great_clog", i)
+		gc.radius = float(od.get("radius", 2.0))
+		gc.hp_max = int(od.get("hp", 30))
+		gc.goo_pool = runner.goo_pool
+		gc.runner_sludge = runner.sludge.add
+		world.add_child(gc)
+		runner.register_object(gc)
+	for e: Variant in d.get("spinners", []):
+		var od: Dictionary = e as Dictionary
+		var sp: Spinner = Spinner.make(float(od.get("radius", 4.0)), float(od.get("thickness", 0.3)),
+			od.get("color", Color(0.4, 0.8, 1.0)) as Color, od.get("axis", Vector3.UP) as Vector3, float(od.get("speed", 0.3)))
+		sp.position = od.get("pos", Vector3.ZERO) as Vector3
+		world.add_child(sp)
 	for e: Variant in d.get("ducks", []):
 		var od: Dictionary = e as Dictionary
 		var duck: GoldenDuck = GoldenDuck.new()

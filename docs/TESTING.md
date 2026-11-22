@@ -106,3 +106,13 @@ You need 2 phones on the same Wi-Fi, or 1 phone and the test bot.
 - [ ] In the hub, USE on the **MIRROR** opens the same screen as an overlay.
 - [ ] Online: change your outfit in the lobby (Customise): the other phone's 3D lobby preview updates.
 - [ ] In a level, other plumbers wear their chosen outfits.
+
+## M9: Levels 2-5, boss, difficulty, mid-level join
+Pick each level at the hub console (try different difficulties).
+- [ ] **2. Zero-G Cafeteria:** the right half floats (bluish zone) and food drifts around. Floating with the stick plus camera works, and you can grab tables. ZAP a canister with the G-Wrench and it falls the way you aimed. The two-player cooler valve turns at half speed solo. Plunging the chute clog works after anchoring with the plunger.
+- [ ] **3. Asteroid Waterworks:** you start on top of a purple rock and can walk ALL the way round it (the camera rolls with you). Both leaks, including the one at the south pole, are reachable. Float the bridge piece into the gap between the rocks; then jump across to the little moon (or climb the bridge pipe) and fill its tank. Drifting into deep space flushes you and you respawn.
+- [ ] **4. Spin-Cycle Habitat:** every ~32 s (Normal), down moves FLOOR 1 → 2 → 3 → 4 with a warning each time. The labels FLOOR 1-4 read upright when their wall is down. The relay switch on FLOOR 3 drops everything onto FLOOR 4. The wall tank only fills while FLOOR 4 is down.
+- [ ] **5. Reactor Plumbing Panic:** three rooms, storms about every 40 s. After the feed pipe is fixed, THE GREAT CLOG wakes up in the core: goo blobs (from vents, leaks and storms) and thrown canisters count down "N / 30". It burps goo back out now and then, and bursts with confetti at 30.
+- [ ] Both room switches (Coolant + Waste) together complete their order and point the reactor gravity sideways.
+- [ ] **Chill** gives longer warnings (4 s), slower sludge and fewer storms; **Chaos** gives 1.5 s warnings and more storms.
+- [ ] With 2 phones: start any level, then have the second phone join mid-level. It spawns at a pad and sees the current progress.

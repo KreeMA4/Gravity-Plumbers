@@ -7,6 +7,10 @@ extends RefCounted
 const LEVELS: Array = [
 	{"id": "hub", "name": "The Rusty Pipe (Hub)", "script": "res://scripts/levels/level_data/hub.gd", "hub": true},
 	{"id": "bathroom", "name": "1. Orbital Bathroom", "script": "res://scripts/levels/level_data/orbital_bathroom.gd", "par": 300.0},
+	{"id": "cafeteria", "name": "2. Zero-G Cafeteria", "script": "res://scripts/levels/level_data/zero_g_cafeteria.gd", "par": 420.0},
+	{"id": "waterworks", "name": "3. Asteroid Waterworks", "script": "res://scripts/levels/level_data/asteroid_waterworks.gd", "par": 480.0},
+	{"id": "spincycle", "name": "4. Spin-Cycle Habitat", "script": "res://scripts/levels/level_data/spin_cycle.gd", "par": 480.0},
+	{"id": "reactor", "name": "5. Reactor Plumbing Panic", "script": "res://scripts/levels/level_data/reactor_panic.gd", "par": 600.0},
 	{"id": "workshop", "name": "Plumbing Workshop (test)", "script": "res://scripts/levels/level_data/workshop.gd", "par": 240.0, "debug": true},
 ]
 
