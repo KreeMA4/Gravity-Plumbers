@@ -91,9 +91,22 @@ def main():
                 counts[key] = 0
             counts[key] += 1
     problems = ["%s  (x%d)" % (k, counts[k]) if counts[k] > 1 else k for k in problems]
-    leaks = sorted(set(l.strip() for l in lines if "Resource still in use" in l or "Leaked instance" in l))
-    for l in leaks[:15]:
-        problems.append("  detail: " + l)
+    # Shutdown leaks: Godot names them only with --verbose. One case is a known engine
+    # artifact, not a game bug: sounds still playing when the run quits leave their
+    # AudioStreamPlayback objects behind because the audio thread stops first.
+    # That case (and ONLY that case) becomes a NOTE; any other leaked type still fails.
+    notes = []
+    leaked = [l.strip() for l in lines if "Leaked instance:" in l]
+    res_in_use = [l.strip() for l in lines if "Resource still in use" in l]
+    if leaked and not res_in_use and all(re.search(r"Leaked instance: AudioStreamPlayback\w*:", l) for l in leaked):
+        before = len(problems)
+        # Only drop the leak line itself, never a different error that merely has it as context.
+        problems = [p for p in problems if "resources still in use at exit" not in p.split("  [")[0]]
+        if len(problems) != before:
+            notes.append("%d audio playback object(s) still active at quit (known Godot shutdown artifact; not counted as a failure)" % len(leaked))
+    else:
+        for l in sorted(set(leaked + res_in_use))[:15]:
+            problems.append("  detail: " + l)
     missing = [e for e in a.expect if not any(re.search(e, l) for l in lines)]
     secs = time.time() - start
     ok = (code == 0) and not timed_out and not problems and not missing
@@ -103,6 +116,8 @@ def main():
         summary("  - error: `%s`" % p.replace("`", "'")[:400])
     if len(problems) > 40:
         summary("  - ... and %d more errors (see the logs artifact)" % (len(problems) - 40))
+    for n in notes:
+        summary("  - note: %s" % n)
     for m in missing:
         summary("  - expected output not found: `%s` (the step did not really run to completion)" % m)
     sys.exit(0 if ok else 1)

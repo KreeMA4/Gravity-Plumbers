@@ -158,7 +158,7 @@ jobs:
         run: >
           python3 tools/ci/run_godot.py --quiet --name "physics soak test" --log ci_logs/soak.log --timeout 1200
           --expect "Soak test PASSED" --
-          "$GODOT" --headless --path . --fixed-fps 60 -- --soak
+          "$GODOT" --headless --verbose --path . --fixed-fps 60 -- --soak
 
       - name: Rendered smoke tests (real OpenGL via Mesa, compiles shaders, screenshots)
         run: |
@@ -170,7 +170,7 @@ jobs:
             local name="$1"; shift
             xvfb-run -a -s "-screen 0 1920x1080x24" python3 tools/ci/run_godot.py --quiet --name "render: $name" \
               --log "ci_logs/render_${name}.log" --timeout 600 --expect "CI screenshot saved" -- \
-              "$GODOT" --path . --rendering-driver opengl3 --fixed-fps 60 --quit-after 420 -- \
+              "$GODOT" --verbose --path . --rendering-driver opengl3 --fixed-fps 60 --quit-after 420 -- \
               "--ci-screenshot=$PWD/ci_screens/$name.png" --ci-frames=360 "$@" || FAILED=1
           }
           shot main_menu
