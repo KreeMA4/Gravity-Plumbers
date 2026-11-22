@@ -14,6 +14,7 @@ const SCREENS: Dictionary = {
 	"main_menu": "res://scripts/ui/main_menu.gd",
 	"gravity_test": "res://scripts/levels/gravity_test_room.gd",
 	"tests": "res://scripts/ui/tests_screen.gd",
+	"look_test": "res://scripts/levels/look_test_room.gd",
 }
 
 var difficulty: int = 1                 ## 0 Chill, 1 Normal, 2 Chaos.

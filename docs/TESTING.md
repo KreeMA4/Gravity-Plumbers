@@ -17,3 +17,12 @@ Tick these off on your phone after each milestone. If anything fails, copy the r
 - [ ] **Zero-G zone**: crates inside the bluish box float and slowly stop drifting.
 - [ ] **Planetoid**: crates near the purple ball are pulled onto it from every side.
 - [ ] Debug rooms → **Run Tests**: every line says "ok" and the header is green.
+
+## M2: Look and shaders
+- [ ] The main menu background shows a room with a big framed window onto twinkling stars, a nebula and a planet that slowly drifts.
+- [ ] Debug rooms → **Look Test Room**: two rooms joined by a doorway, with flat cel-shaded colours (3 light bands) and a soft rim light.
+- [ ] Pipes are smooth tubes with rounded bends and flanges. The orange pipe glows a little.
+- [ ] The three crates have thin dark outlines. The walls do not.
+- [ ] The goo blobs wobble and glow lime and purple.
+- [ ] The debug overlay shows fewer than 250 draw calls in this room.
+- [ ] Nothing renders inside-out. If pipes look hollow or the outlines cover whole objects, report it: the triangle winding is wrong.
