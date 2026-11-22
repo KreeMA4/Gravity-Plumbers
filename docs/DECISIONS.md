@@ -48,3 +48,29 @@ One line per decision: what was decided, and why.
   - `scripts/core/build_info.gd`, shown on the main menu, in the debug overlay and in the startup log.
 
   Export starts from an empty `build/`, and the APK must be newer than a marker made just before export. `verify_apk.sh` checks the APK's version is this run's. After upload, the artifact is downloaded again and its contents, SHA-256 and version are checked. The SHA-256 goes in the run summary, an annotation, `BUILD_INFO.txt` and `<apk>.sha256`. Builds made outside CI show "local build".
+- **Picking up is separate from grabbing.** Root cause of accidental pickups: holding Grab R equipped any tool that touched the palm sphere, and tools had the highest grab score. So reaching for a pipe or wall near the tool rack (or holding Grab while walking past) grabbed the tool. Now there are four separate actions:
+  - **Pick up:** only the new Interact input does this (`PlumberInput.INTERACT`, bit 256, sent in the input packet's spare byte; C key, RB or d-pad down, and a contextual touch button).
+  - **Hold / carry:** tools equip into the right hand; pipe pieces and goo canisters are carried, locked to the right hand, until Interact again (DROP).
+  - **Grab (Grab L / R):** clings to surfaces, crates and teammates, and ignores the `pickups` group.
+  - **Use:** the held tool.
+
+  `Interaction.find()` picks the best target: switches and stations first, then the item you face (closest wins between equals), then DROP. It checks range (`Tuning.PICKUP_RANGE`), angle (`PICKUP_MIN_DOT`) and line of sight. The same query runs on the host (to act) and on each device (to show the prompt), using only state every peer has. The snapshot carries a "right hand full" flag (`F_HAND_FULL`) so clients know too.
+- **Carried pipe pieces snap into their port without lining up.** A carried piece is held crossways and can't be twisted, so bringing it to the port is enough. A loose piece still has to be aligned.
+- **Walk animation: planted feet instead of swinging legs.** Root cause of the floating look: the hover spring held the pelvis at a fixed height while the hips only swung back and forth. A swinging straight leg lifts its foot, so both feet were off the floor mid-stride and the body slid along. `Gait` (pure maths, unit-tested) gives each leg a stance/swing cycle. The cadence is matched to the measured speed, so a planted foot moves back at exactly body speed (no skating). Two-bone IK puts the foot on the floor, and the pelvis rides only as high as the stance leg reaches, which makes the walk bob. On top of that: a walk-to-run blend (flight phase, lean, bent elbows), hip-roll weight shift, idle breathing, jump tuck, falling reach and landing squash. All of these are only muscle targets for the same physics ragdoll, so balance loss, ragdoll, recovery, grabs and wall/ceiling walking are untouched.
+- **Exposure: Linear tone mapping with a lighting budget.** Root causes of the washed-out look:
+  - The toon rim was unlit emission on every surface, so floors and walls at grazing angles glowed.
+  - Shadowed pixels still got half of the middle band.
+  - Walls were 0.85-1.0 albedo under strong ambient plus a full-band sun.
+  - Filmic with white = 1 clipped everything above 1 to white.
+  - Lamps were banded hot spots.
+
+  The fixes:
+  - The rim is now a lit-side lighting term, and 0 on level surfaces.
+  - Shadows fall to the shadow band.
+  - Lamps give soft pools of light.
+  - Lighting budget: ambient 0.5, sun 0.8, lamps 0.4. Palettes stay under ~0.85.
+  - Floors have world-space tiles and walls have panels (shader pattern, batching-safe).
+  - Every level has its own palette, with clear floor/wall/ceiling/trim separation.
+  - Soft sun shadows are on from Medium quality up.
+
+  CI prints near-white / clipped / saturation / contrast numbers for every screenshot.

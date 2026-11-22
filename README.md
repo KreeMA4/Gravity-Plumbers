@@ -72,14 +72,19 @@ button shows the last lines on screen.
 ## 3. Controls
 
 **Touch (landscape):**
-* **Left thumb:** a floating joystick appears wherever you touch the left half of the screen.
+* **Left thumb:** the round MOVE joystick (bottom-left). Touching elsewhere in the lower-left
+  brings it under your thumb.
 * **Right half:** drag anywhere that isn't a button to look around.
-* **Buttons:** Jump, Grab L, Grab R (hold), Use (tool or interact), Boots (toggle),
-  Flop, Get Up, Emote and Pause.
+* **PICK UP / DROP (white button):** only appears when there's something to pick up, drop or
+  flip. A yellow arrow and a "PICK UP  Plunger" label show exactly which item. Walking into
+  items or holding Grab never picks them up.
+* **Buttons:** Jump, Grab L, Grab R (hold: cling to ledges, pipes, crates and teammates), Use
+  (the held tool; dimmed when there's nothing to use), Boots (toggle), Flop, Get Up, Emote, Pause.
 * **Settings → Controls:** single Grab button, left-handed layout, button size and opacity,
   haptics.
 
-**Desktop:** WASD to move, drag with the mouse to look, Space to jump, Q/E to grab left/right,
+**Desktop:** WASD to move, drag with the mouse to look, Space to jump, C to pick up / drop /
+interact (gamepad: RB or d-pad down), Q/E to grab left/right,
 F to use, G for boots, R to flop, T to get up, X to emote, Esc to pause. F3 shows the debug
 overlay and F4 cycles gravity (only in debug rooms). Gamepads work too.
 

@@ -29,7 +29,9 @@ Tick these off on your phone after each milestone. If anything fails, copy the r
 
 ## M3: Ragdoll plumber
 - [ ] Debug rooms → **Ragdoll Playground**: a chunky plumber with big googly eyes and a mustache stands on the floor.
-- [ ] A round MOVE joystick is always visible bottom-left; dragging it moves the plumber in all 8 directions relative to the camera. The legs swing in a walk cycle and the arms swing opposite.
+- [ ] A round MOVE joystick is always visible bottom-left; dragging it moves the plumber in all 8 directions relative to the camera.
+- [ ] Walking (half stick): the feet step on the floor (they don't glide), left and right alternate, the body bobs and the hips sway a little, and the arms swing opposite the legs. Full stick: a faster run with a forward lean and bent elbows. Let go: he stops and stands on both feet, breathing.
+- [ ] Jump: knees tuck going up, legs reach down when falling, knees soak up the landing.
 - [ ] Dragging on the right half orbits the camera. After a second of walking, it settles back behind you.
 - [ ] **JUMP** jumps. Holding it jumps slightly higher. Walking off the stairs and jumping right away still works (coyote time).
 - [ ] **FLOP** makes the plumber go limp. After about 1-2 seconds it wobbles back up by itself. **UP!** speeds this up.
@@ -41,8 +43,11 @@ Tick these off on your phone after each milestone. If anything fails, copy the r
 - [ ] Walk off into space if you can (through a window gap, or with gravity pointing at the window): you get flushed and respawn after 3 s.
 
 ## M4: Grab and tools
-- [ ] In the Ragdoll Playground, walk to the yellow **TOOLS** rack (to your right). Hold **GRAB R** on a tool: it snaps into your right hand and the Use button label changes.
-- [ ] Tap **GRAB R** again: you drop the tool.
+- [ ] In the Ragdoll Playground, walk to the yellow **TOOLS** rack (to your right). Walking into it, or holding **GRAB L/R** next to it, picks nothing up.
+- [ ] Face a tool within about 2 m: a yellow arrow points at it, a "PICK UP  Plunger" label appears, and the white **PICK UP** button shows up. Step away: all three disappear.
+- [ ] Tap **PICK UP**: the tool jumps into your right hand, the Use button label changes, and the white button now says **DROP**. Tapping **GRAB R** does not drop it.
+- [ ] Tap **DROP**: you put the tool down in front of you.
+- [ ] Pipe pieces and goo canisters work the same way: PICK UP carries them in front of you (no button held), DROP puts them down. Carry a pipe piece to its glowing ghost: it snaps in.
 - [ ] **Plunger:** aim at a wall and tap USE (label "STICK"): it sticks. Now tap **Gravity**: you don't tumble (braced). Release USE to unstick.
 - [ ] **Pipe wrench:** walk up to a bot and tap USE ("BONK"): the bot goes floppy and stars pop.
 - [ ] **Duct tape:** tap USE on a crate: it freezes in place for about 10 s.
