@@ -437,6 +437,31 @@ func _check_pipe_port() -> void:
 
 # --- locomotion -----------------------------------------------------------------
 
+## Signed rotation (radians) about the parent's X axis from parent to child body.
+func joint_angle(child: String, parent: String) -> float:
+	var c: RigidBody3D = plumber.bodies.get(child) as RigidBody3D
+	var p: RigidBody3D = plumber.bodies.get(parent) as RigidBody3D
+	if c == null or p == null:
+		return 0.0
+	var q: Quaternion = p.global_basis.get_rotation_quaternion().inverse() * c.global_basis.get_rotation_quaternion()
+	return 2.0 * atan2(q.x, q.w)
+
+
+## One line of leg diagnostics (printed as "info" so CI shows it).
+func leg_report(tag: String) -> void:
+	var t_hip: float = 0.0
+	var t_knee: float = 0.0
+	if plumber.limbs.has("hip_l"):
+		var qh: Quaternion = (plumber.limbs["hip_l"] as LimbController).target
+		t_hip = 2.0 * atan2(qh.x, qh.w)
+	if plumber.limbs.has("knee_l"):
+		var qk: Quaternion = (plumber.limbs["knee_l"] as LimbController).target
+		t_knee = 2.0 * atan2(qk.x, qk.w)
+	print("  info  legs[%s]: clear L %.3f R %.3f | ground_dist %.3f ride %.3f grounded %s | hipL tgt %.2f act %.2f | kneeL tgt %.2f act %.2f | amt %.2f phase %.2f" % [
+		tag, sole_clearance("l"), sole_clearance("r"), plumber.ground_dist, plumber.gait_ride, str(plumber.grounded),
+		t_hip, joint_angle("thigh_l", "pelvis"), t_knee, joint_angle("shin_l", "thigh_l"), plumber.gait_amount, fposmod(plumber.walk_phase, TAU)])
+
+
 ## Walk/run for `n` frames at stick strength `k`; returns measurements.
 func _measure_gait(k: float, n: int) -> Dictionary:
 	var f: Vector3 = fwd()
@@ -454,6 +479,8 @@ func _measure_gait(k: float, n: int) -> Dictionary:
 	Input.action_press("move_forward", k)
 	for i: int in n:
 		await frames(1)
+		if i % 30 == 15:
+			leg_report("k=%.1f f%d" % [k, i])
 		if i < 45:
 			continue   # let it get going
 		samples += 1
@@ -495,8 +522,10 @@ func _check_walk() -> void:
 	await frames(60)
 	ok(sole_clearance("l") < 0.06 and sole_clearance("r") < 0.06, "idle: both feet on the ground (%.3f, %.3f m)" % [sole_clearance("l"), sole_clearance("r")])
 	ok(plumber.gait_amount < 0.05, "idle: no walk cycle while standing (%.2f)" % plumber.gait_amount)
+	leg_report("idle")
 	await screenshot("anim_idle")
-	var m: Dictionary = await _measure_gait(0.4, 210)
+	# Stick 0.6 = 0.4 of top speed after the 0.25 input deadzone (~1.8 m/s, a walk).
+	var m: Dictionary = await _measure_gait(0.6, 210)
 	print("  info  walk: %s" % str(m))
 	ok(float(m["dist"]) > 2.0, "walk: moved forward (%.2f m)" % float(m["dist"]))
 	ok(float(m["contact"]) > 0.9, "walk: a foot is on the ground %.0f%% of the time (no floating)" % (100.0 * float(m["contact"])))
@@ -504,7 +533,7 @@ func _check_walk() -> void:
 	ok(float(m["steps_per_s"]) > 1.2, "walk: left and right feet alternate (%.1f steps/s)" % float(m["steps_per_s"]))
 	ok(float(m["bob"]) > 0.008 and float(m["bob"]) < 0.16, "walk: body bobs with the steps (%.3f m)" % float(m["bob"]))
 	# Screenshot mid-stride.
-	Input.action_press("move_forward", 0.4)
+	Input.action_press("move_forward", 0.6)
 	await frames(50)
 	await screenshot("anim_walk")
 	Input.action_release("move_forward")
@@ -514,6 +543,7 @@ func _check_walk() -> void:
 	v.y = 0.0
 	ok(v.length() < 0.35, "walk: stops when the stick is released (%.2f m/s)" % v.length())
 	ok(plumber.gait_amount < 0.15, "walk: legs stop stepping (%.2f)" % plumber.gait_amount)
+	leg_report("stopped")
 	ok(sole_clearance("l") < 0.07 and sole_clearance("r") < 0.07, "walk: ends standing on both feet")
 
 
