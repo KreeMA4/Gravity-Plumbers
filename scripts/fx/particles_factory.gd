@@ -109,3 +109,7 @@ static func flush_swirl(parent: Node, pos: Vector3) -> void:
 		p.tangential_accel_max = 6.0
 		p.radial_accel_min = -3.0
 		p.radial_accel_max = -1.0
+
+
+static func clear_cache() -> void:
+	_mesh_cache.clear()

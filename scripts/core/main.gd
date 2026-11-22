@@ -56,5 +56,14 @@ func _process(_delta: float) -> void:
 	_shot_path = ""
 
 
+## On quit, drop the static caches (shared materials, meshes, theme) so every
+## resource is released cleanly ("resources still in use at exit" otherwise).
+func _exit_tree() -> void:
+	Mats.clear_cache()
+	FX.clear_cache()
+	PipeBuilder.clear_cache()
+	UITheme.clear_cache()
+
+
 func get_debug_overlay() -> CanvasLayer:
 	return get_node_or_null("DebugOverlay") as CanvasLayer

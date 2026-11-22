@@ -249,3 +249,8 @@ static func multimesh(parent: Node, mesh: Mesh, transforms: Array, mat: Material
 	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	parent.add_child(mmi)
 	return mmi
+
+
+static func clear_cache() -> void:
+	_bolt_mesh = null
+	_flange_cache.clear()

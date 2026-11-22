@@ -29,6 +29,10 @@ const MIN_TOUCH: float = 150.0   # px at 1080p, comfortably over 56dp on phones
 static var _theme: Theme = null
 
 
+static func clear_cache() -> void:
+	_theme = null
+
+
 static func get_theme() -> Theme:
 	if _theme != null:
 		return _theme
