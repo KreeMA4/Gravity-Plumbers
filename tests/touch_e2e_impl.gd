@@ -191,8 +191,10 @@ func _check_analog() -> void:
 	var view: Vector2 = touch.get_viewport().get_visible_rect().size
 	var away: Vector2 = Vector2(view.x * 0.32, view.y * 0.55)
 	touch_down(0, away)
-	await get_tree().process_frame
-	ok(touch.is_joystick_active() and touch.joystick_center().distance_to(away) < 1.0, "touch elsewhere in the left zone re-centres the stick")
+	await frames(3)   # let the input buffer flush (one frame is not always enough)
+	ok(touch.is_joystick_active() and touch.joystick_center().distance_to(away) < 1.0,
+		"touch elsewhere in the left zone re-centres the stick (active %s, centre %s, touch %s, home %s)"
+		% [str(touch.is_joystick_active()), str(touch.joystick_center()), str(away), str(touch.joystick_home())])
 	touch_up(0, away)
 	await frames(2)
 	ok(touch.joystick_center().distance_to(touch.joystick_home()) < 0.5, "stick returns home after release")
