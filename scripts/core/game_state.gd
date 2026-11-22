@@ -90,6 +90,17 @@ func start_level(new_level_id: String) -> void:
 	goto_screen("game", {"level_id": new_level_id})
 
 
+## Quit cleanly: stop all audio first and give Godot's audio thread a moment
+## to release the playing sounds, so nothing is left "in use" at exit.
+func quit_game(exit_code: int = 0) -> void:
+	AudioManager.stop_all()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	OS.delay_msec(250)   # the audio thread keeps running while we wait
+	await get_tree().process_frame
+	get_tree().quit(exit_code)
+
+
 func _notification(what: int) -> void:
 	# Android lifecycle: the app was sent to the background / came back.
 	if what == NOTIFICATION_APPLICATION_PAUSED:

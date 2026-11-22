@@ -109,7 +109,7 @@ func _finish() -> void:
 		_label.text += "\n\n" + summary
 		_label.add_theme_color_override("font_color", UITheme.C_GOOD if ok else UITheme.C_DANGER)
 	if OS.get_cmdline_user_args().has("--soak"):
-		get_tree().quit(0 if ok else 1)
+		GameState.quit_game(0 if ok else 1)
 
 
 func _exit_tree() -> void:

@@ -208,6 +208,20 @@ func speak(text: String, base_pitch: float = 1.0, pos: Variant = null) -> void:
 			break
 
 
+## Stop every sound that is playing (used before quitting).
+func stop_all() -> void:
+	for item: Variant in _pool3d:
+		(item as AudioStreamPlayer3D).stop()
+	for item2: Variant in _pool_ui:
+		(item2 as AudioStreamPlayer).stop()
+	if _music_a != null:
+		_music_a.stop()
+	if _music_storm != null:
+		_music_storm.stop()
+	_music_name = ""
+	_voice_queue.clear()
+
+
 ## On quit, let go of every loaded sound so they're freed cleanly
 ## (otherwise Godot reports "resources still in use at exit").
 func _exit_tree() -> void:

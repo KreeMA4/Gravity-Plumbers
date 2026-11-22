@@ -9,9 +9,11 @@ extends Node
 ##   --screen=<id>                       boot straight into a screen (e.g. look_test)
 ##   --level=<id>                        boot straight into a level, solo (e.g. bathroom)
 ##   --ci-screenshot=<path.png>          save a screenshot after --ci-frames=N frames (default 240)
+##   --ci-quit-frames=N                  quit cleanly (audio stopped first) after N frames
 
 var _shot_path: String = ""
 var _shot_frames: int = 240
+var _quit_frames: int = -1
 
 
 func _ready() -> void:
@@ -25,6 +27,8 @@ func _ready() -> void:
 			_shot_path = a.substr(16)
 		elif a.begins_with("--ci-frames="):
 			_shot_frames = maxi(1, a.substr(12).to_int())
+		elif a.begins_with("--ci-quit-frames="):
+			_quit_frames = maxi(1, a.substr(17).to_int())
 	if NetManager.handle_cmdline(args):
 		return
 	if args.has("--soak"):
@@ -42,6 +46,10 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
+	if _quit_frames > 0:
+		_quit_frames -= 1
+		if _quit_frames == 0:
+			GameState.quit_game(0)
 	if _shot_path == "":
 		return
 	_shot_frames -= 1
