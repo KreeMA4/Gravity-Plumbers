@@ -13,6 +13,8 @@ const BOOTS: int = 16
 const FLOP: int = 32
 const GET_UP: int = 64
 const EMOTE: int = 128
+const INTERACT: int = 256   ## contextual: pick up / drop / flip a switch (sent in the spare byte)
+const ALL_BITS: int = 511
 
 var move: Vector2 = Vector2.ZERO
 var aim: Vector3 = Vector3.FORWARD
@@ -39,11 +41,12 @@ func sanitize() -> void:
 	if not aim.is_finite() or aim.length_squared() < 0.01:
 		aim = Vector3.FORWARD
 	aim = aim.normalized()
-	buttons = buttons & 255
+	buttons = buttons & ALL_BITS
 	emote_id = clampi(emote_id, 0, 7)
 
 
-## 8 bytes: move x/y as int8, aim as 3 x int8 (quantised unit vector), buttons, emote, spare.
+## 8 bytes: move x/y as int8, aim as 3 x int8 (quantised unit vector), buttons (low 8 bits),
+## emote, buttons (high bits: INTERACT).
 func to_bytes() -> PackedByteArray:
 	var b: PackedByteArray = PackedByteArray()
 	b.resize(8)
@@ -54,7 +57,7 @@ func to_bytes() -> PackedByteArray:
 	b.encode_s8(4, Quantize.f_to_s8(aim.z))
 	b.encode_u8(5, buttons & 255)
 	b.encode_u8(6, emote_id & 7)
-	b.encode_u8(7, 0)
+	b.encode_u8(7, (buttons >> 8) & 255)
 	return b
 
 
@@ -64,7 +67,7 @@ static func from_bytes(b: PackedByteArray) -> PlumberInput:
 		return inp
 	inp.move = Vector2(Quantize.s8_to_f(b.decode_s8(0)), Quantize.s8_to_f(b.decode_s8(1)))
 	inp.aim = Vector3(Quantize.s8_to_f(b.decode_s8(2)), Quantize.s8_to_f(b.decode_s8(3)), Quantize.s8_to_f(b.decode_s8(4)))
-	inp.buttons = b.decode_u8(5)
+	inp.buttons = b.decode_u8(5) | (b.decode_u8(7) << 8)
 	inp.emote_id = b.decode_u8(6)
 	inp.sanitize()
 	return inp

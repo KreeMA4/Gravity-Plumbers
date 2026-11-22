@@ -17,6 +17,7 @@ func _init() -> void:
 	add_to_group("grabbable")
 	add_to_group("props")
 	add_to_group("pipe_pieces")
+	add_to_group("pickups")
 
 
 func _ready() -> void:
@@ -40,6 +41,28 @@ func _ready() -> void:
 	add_child(GravityBody.new())
 
 
+func can_pick_up() -> bool:
+	return not is_locked
+
+
+func get_interact_name() -> String:
+	return "Pipe Piece"
+
+
+## Carried crossways in front of you (the pipe's axis is its local Y).
+func carry_rotation() -> Quaternion:
+	return Quaternion(Vector3.BACK, -PI * 0.5)
+
+
+## True while a plumber carries it (picked up with Interact).
+func is_carried() -> bool:
+	for p: Node in get_tree().get_nodes_in_group("plumbers"):
+		var pl: Plumber = p as Plumber
+		if pl != null and pl.held_item() == self:
+			return true
+	return false
+
+
 func lock_into(xform: Transform3D) -> void:
 	is_locked = true
 	# Let go of every hand holding us.
@@ -54,4 +77,5 @@ func lock_into(xform: Transform3D) -> void:
 	global_transform = xform
 	reset_physics_interpolation()
 	remove_from_group("grabbable")
+	remove_from_group("pickups")
 	add_to_group("grabbable_static")

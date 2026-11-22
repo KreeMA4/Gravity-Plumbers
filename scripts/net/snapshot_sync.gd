@@ -27,6 +27,7 @@ const F_BOOTS_ON: int = 1
 const F_BOOTS_ACTIVE: int = 2
 const F_CELEBRATE: int = 4
 const F_EMOTE: int = 8
+const F_HAND_FULL: int = 128   ## right hand holds a picked-up item or tool (bits 4-6 are the emote id)
 
 
 ## plumbers: Array of Dictionary {index, state, flags (emote id in bits 4-6), up, vel, parts: [[pos, quat], ...]}

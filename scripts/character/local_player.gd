@@ -8,7 +8,10 @@ var camera: PlumberCamera
 var touch: TouchControls
 var input: LocalInput
 var ui_layer: CanvasLayer
+var prompt: InteractPrompt
 var plumber: Plumber = null
+## What Interact would do right now (recomputed every frame for the prompt + button).
+var interaction: Interaction = Interaction.new()
 
 
 func _init() -> void:
@@ -21,6 +24,9 @@ func _init() -> void:
 	add_child(ui_layer)
 	touch = TouchControls.new()
 	touch.name = "TouchControls"
+	prompt = InteractPrompt.new()
+	prompt.name = "InteractPrompt"
+	ui_layer.add_child(prompt)      # under the touch controls (it ignores touches)
 	ui_layer.add_child(touch)
 	input = LocalInput.new()
 	input.touch = touch
@@ -47,6 +53,16 @@ func set_blocked(on: bool) -> void:
 func _process(_delta: float) -> void:
 	if plumber != null and is_instance_valid(plumber):
 		touch.boots_lit = plumber.boots_on
+		touch.use_enabled = plumber.can_use()
+		touch.get_up_enabled = plumber.state == Plumber.State.RAGDOLL
+		if input.blocked:
+			interaction = Interaction.new()
+		else:
+			interaction = Interaction.find(plumber, camera.get_aim())
+	else:
+		interaction = Interaction.new()
+	touch.interact_label = "" if interaction.is_none() else interaction.button_text()
+	prompt.show_action(interaction, camera.cam)
 
 
 func _on_impact(strength: float, _at: Vector3) -> void:

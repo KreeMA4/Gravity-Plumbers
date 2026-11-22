@@ -63,6 +63,10 @@ func get_use_label() -> String:
 	return "LOOK" if kind == "mirror" else "JOBS"
 
 
+func get_interact_name() -> String:
+	return "Mirror" if kind == "mirror" else "Job Console"
+
+
 func interact(p: Plumber) -> void:
 	if runner != null:
 		runner.on_station(kind, p)

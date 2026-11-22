@@ -54,7 +54,9 @@ func _physics_process(_dt: float) -> void:
 	var piece_axis: Vector3 = ps.global_basis.y.normalized()
 	var ang: float = piece_axis.angle_to(axis.normalized())
 	ang = minf(ang, PI - ang)   # a pipe fits either way round
-	if ang > Tuning.PIPE_SNAP_ANGLE:
+	# A carried piece is held crossways and can't be twisted, so bringing it to
+	# the port is enough; a loose piece still has to line up.
+	if ang > Tuning.PIPE_SNAP_ANGLE and not ps.is_carried():
 		return
 	ps.lock_into(Transform3D(PipeBuilder.basis_along(axis), global_position))
 	mark_done()

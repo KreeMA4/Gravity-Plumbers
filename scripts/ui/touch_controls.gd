@@ -22,6 +22,8 @@ const BUTTON_DEFS: Array = [
 	["flop", "FLOP", PlumberInput.FLOP, Vector2(-160, -610), 0.7, Color(1.0, 0.4, 0.55)],
 	["get_up", "UP!", PlumberInput.GET_UP, Vector2(-360, -600), 0.7, Color(0.95, 0.85, 0.3)],
 	["emote", ":)", PlumberInput.EMOTE, Vector2(-560, -560), 0.55, Color(0.7, 0.7, 0.8)],
+	# Contextual: only shown when there's something to pick up / drop / flip.
+	["interact", "PICK UP", PlumberInput.INTERACT, Vector2(-620, -370), 1.0, Color(1.0, 1.0, 1.0)],
 ]
 
 var buttons_held: int = 0          ## current button bits from touches
@@ -30,6 +32,11 @@ var look_delta: Vector2 = Vector2.ZERO
 var use_label: String = "USE"      ## context label (e.g. "TAPE", "TURN")
 var enabled: bool = true
 var boots_lit: bool = false        ## draws the Boots button highlighted while on
+var interact_label: String = ""    ## "PICK UP" / "DROP" / "PULL"...; "" hides the Interact button
+var use_enabled: bool = true       ## false: Use is drawn dimmed (no tool, nothing to use)
+var get_up_enabled: bool = true    ## false: "UP!" is drawn dimmed (you're already standing)
+var _time: float = 0.0
+var _last_sig: String = ""
 
 var _owners: Dictionary = {}       ## touch index -> "joy" / "look" / button id
 var _joy_home: Vector2 = Vector2.ZERO    ## resting position of the joystick (bottom-left)
@@ -130,9 +137,16 @@ func button_ids() -> Array:
 	return out
 
 
+## Is the button with this id currently on screen? (Interact hides itself.)
+func button_shown(id: String) -> bool:
+	return id != "interact" or interact_label != ""
+
+
 func _button_at(p: Vector2) -> Array:
 	for b: Variant in _buttons:
 		var arr: Array = b as Array
+		if not button_shown(str(arr[0])):
+			continue
 		if p.distance_to(arr[3] as Vector2) <= float(arr[4]) * 1.1:
 			return arr
 	return []
@@ -222,6 +236,14 @@ func _recompute_buttons() -> void:
 	buttons_held = bits
 
 
+func _process(delta: float) -> void:
+	_time += delta
+	var sig: String = "%s|%s|%s|%s" % [interact_label, use_label, str(use_enabled), str(get_up_enabled)]
+	if interact_label != "" or sig != _last_sig:
+		queue_redraw()   # labels changed, or the Interact pulse is animating
+	_last_sig = sig
+
+
 ## Called when the controls are hidden (pause, menus): forget every finger.
 func reset() -> void:
 	_owners.clear()
@@ -242,28 +264,52 @@ func _draw() -> void:
 		return
 	var alpha: float = clampf(SaveData.setting_f("button_opacity"), 0.2, 1.0)
 	_draw_joystick(alpha)
-	# Buttons
+	# Buttons: one consistent style (shadow, coloured fill, white rim, outlined
+	# label). Pressed = brighter and a touch bigger; unavailable = dimmed.
 	for b: Variant in _buttons:
 		var arr: Array = b as Array
 		var id: String = str(arr[0])
+		if not button_shown(id):
+			continue
 		var c: Vector2 = arr[3] as Vector2
 		var r: float = float(arr[4])
 		var col: Color = arr[5] as Color
 		var pressed: bool = (buttons_held & int(arr[2])) != 0 or (id == "boots" and boots_lit)
-		var fill: Color = col if pressed else col.darkened(0.35)
-		fill.a = (0.9 if pressed else 0.55) * alpha
-		draw_circle(c, r, fill)
-		draw_arc(c, r, 0.0, TAU, 40, Color(0.02, 0.02, 0.08, 0.9 * alpha), 5.0, true)
-		var txt: String = use_label if id == "use" else str(arr[1])
-		var fs: int = int(clampf(r * 0.42, 18.0, 40.0))
-		var w: float = _font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
-		draw_string_outline(_font, c + Vector2(-w * 0.5, fs * 0.35), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 6, Color(0, 0, 0, alpha))
-		draw_string(_font, c + Vector2(-w * 0.5, fs * 0.35), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(1, 1, 1, alpha))
+		var dim: bool = (id == "use" and not use_enabled) or (id == "get_up" and not get_up_enabled)
+		var txt: String = use_label if id == "use" else (interact_label if id == "interact" else str(arr[1]))
+		_draw_button(c, r, col, txt, pressed, dim, id == "interact", alpha)
 	# Pause button (two bars)  (drawn after the joystick and buttons)
 	var pc: Vector2 = _pause_rect.get_center()
 	draw_circle(pc, _pause_rect.size.x * 0.5, Color(0.1, 0.1, 0.2, 0.6 * alpha))
 	draw_rect(Rect2(pc + Vector2(-14, -16), Vector2(9, 32)), Color(1, 1, 1, alpha))
 	draw_rect(Rect2(pc + Vector2(5, -16), Vector2(9, 32)), Color(1, 1, 1, alpha))
+
+
+func _draw_button(c: Vector2, r: float, col: Color, txt: String, pressed: bool, dim: bool, contextual: bool, alpha: float) -> void:
+	var a: float = alpha * (0.45 if dim else 1.0)
+	var rr: float = r * (1.06 if pressed else 1.0)
+	if contextual:
+		# The Interact button pulses gently so you notice it appeared.
+		var pulse: float = 0.5 + 0.5 * sin(_time * 5.0)
+		draw_arc(c, rr + 10.0 + pulse * 6.0, 0.0, TAU, 48, Color(1.0, 0.85, 0.2, (0.35 + 0.4 * pulse) * alpha), 5.0, true)
+	draw_circle(c + Vector2(0, 6), rr, Color(0, 0, 0, 0.25 * a))
+	var fill: Color = col if pressed else col.darkened(0.25)
+	if dim:
+		fill = fill.lerp(Color(0.35, 0.36, 0.42), 0.6)
+	fill.a = (0.95 if pressed else (0.85 if contextual else 0.62)) * a
+	draw_circle(c, rr, fill)
+	draw_arc(c, rr, 0.0, TAU, 48, Color(1, 1, 1, 0.85 * a), 4.0, true)
+	draw_arc(c, rr + 3.0, 0.0, TAU, 48, Color(0.02, 0.02, 0.08, 0.6 * a), 3.0, true)
+	var fs: int = int(clampf(r * 0.4, 18.0, 40.0))
+	var w: float = _font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+	if w > rr * 1.8:   # long labels ("PICK UP") shrink to fit inside the circle
+		fs = int(float(fs) * rr * 1.8 / w)
+		w = _font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+	var at: Vector2 = c + Vector2(-w * 0.5, fs * 0.35)
+	var ink: Color = Color(0.08, 0.1, 0.25, a) if contextual else Color(1, 1, 1, a)
+	var edge: Color = Color(1, 1, 1, a) if contextual else Color(0, 0, 0, a)
+	draw_string_outline(_font, at, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 6, edge)
+	draw_string(_font, at, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, ink)
 
 
 ## The movement stick: a dark rounded base with a white rim, teal inner ring and

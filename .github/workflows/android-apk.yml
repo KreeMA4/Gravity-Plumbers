@@ -193,8 +193,10 @@ jobs:
           }
           shot main_menu
           shot look_test --screen=look_test
-          shot bathroom --level=bathroom
-          shot reactor --level=reactor
+          shot playground --screen=playground
+          for l in hub bathroom cafeteria waterworks spincycle reactor workshop; do
+            shot "level_$l" "--level=$l"
+          done
           exit $FAILED
 
       - name: Touch input end-to-end test (Android touch events in a gameplay screen)
@@ -206,6 +208,12 @@ jobs:
           --log ci_logs/touch_e2e.log --timeout 600 --expect "TOUCH E2E PASSED" --
           "$GODOT" --verbose --path . --rendering-driver opengl3 --audio-driver Dummy --fixed-fps 60
           -s res://tests/touch_e2e_test.gd -- --shots=$PWD/ci_screens
+
+      - name: Screenshot report (exposure stats + thumbnails in the log)
+        if: always()
+        run: |
+          pip install --quiet pillow
+          ls ci_screens/*.png > /dev/null 2>&1 && python3 tools/ci/thumbs.py ci_screens/*.png || echo "no screenshots"
 
       # -------------------------------------------------------------- export
       - name: Export Android debug APK (fresh, this run only)

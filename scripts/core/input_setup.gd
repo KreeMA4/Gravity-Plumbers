@@ -22,6 +22,7 @@ const ACTIONS: Dictionary = {
 	"grab_left": ["k:Q", "ja:4:1"],
 	"grab_right": ["k:E", "ja:5:1"],
 	"use": ["k:F", "jb:2"],
+	"interact": ["k:C", "jb:10", "jb:12"],
 	"boots": ["k:G", "jb:3"],
 	"flop": ["k:R", "jb:1"],
 	"get_up": ["k:T", "jb:9"],
@@ -79,6 +80,7 @@ static func _key_from_name(key_name: String) -> Key:
 		"R": return KEY_R
 		"T": return KEY_T
 		"X": return KEY_X
+		"C": return KEY_C
 		"UP": return KEY_UP
 		"DOWN": return KEY_DOWN
 		"LEFT": return KEY_LEFT

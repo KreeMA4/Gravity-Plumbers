@@ -727,6 +727,8 @@ func _build_snapshot() -> PackedByteArray:
 			flags |= SnapshotSync.F_CELEBRATE
 		if p.emote_time > 0.0:
 			flags |= SnapshotSync.F_EMOTE | ((p.emote_id & 7) << 4)
+		if p.is_hand_full():
+			flags |= SnapshotSync.F_HAND_FULL
 		plumber_states.append({"index": p.player_index, "state": int(p.state), "flags": flags,
 			"up": p.local_up, "vel": p.get_velocity(), "parts": parts})
 	# Props: awake/moving ones first (they matter most), sleeping ones rarely.

@@ -10,6 +10,12 @@ extends Node
 ## Targets can react: if the grabbed body (or its owner) has
 ##   on_grab(plumber, side) / on_release(plumber, side)
 ## those are called (tools, valve handles, switches use this).
+##
+## Grabbing is NOT picking up. Items in the "pickups" group (tools, pipe pieces,
+## goo canisters) are ignored by these physics hands; they are only picked up
+## with the Interact button (see Interaction), which calls carry() / ToolBase.equip().
+## A carried item stays in the right hand until Interact is pressed again (DROP),
+## independent of the Grab buttons.
 
 signal grabbed(target: Node)
 signal released(target: Node)
@@ -22,6 +28,7 @@ var target: PhysicsBody3D = null
 var target_owner: Node = null        ## node that receives on_grab/on_release
 var hold_time: float = 0.0
 var tool: Node = null                ## a ToolBase held in this hand (right hand only)
+var carrying: bool = false           ## target is an item picked up with Interact (not a Grab)
 
 var _shape: SphereShape3D = SphereShape3D.new()
 var _cooldown: float = 0.0
@@ -74,16 +81,25 @@ func _physics_process(dt: float) -> void:
 	var shoulder: LimbController = plumber.limbs.get(lc_key) as LimbController
 	var active: bool = plumber.state == Plumber.State.ACTIVE or plumber.state == Plumber.State.GETTING_UP
 	var held_now: bool = plumber.input.held(bit)
-	var pressed: bool = held_now and not _prev_held
 	_prev_held = held_now
 	var wants: bool = held_now and active
 	if tool != null and is_instance_valid(tool):
 		# Holding a tool: the arm points where you aim so Use hits the right spot.
-		# Tap Grab R again to drop it. Going limp drops it too.
+		# Interact (DROP) puts it down; going limp drops it too. Grab R doesn't
+		# touch it, so you can't drop your tool by accident.
 		_aim_arm(shoulder, true)
-		if pressed or plumber.state == Plumber.State.RAGDOLL or plumber.state == Plumber.State.FLUSHED:
+		if plumber.state == Plumber.State.RAGDOLL or plumber.state == Plumber.State.FLUSHED:
 			drop_tool()
 			_cooldown = 0.4
+		return
+	if carrying:
+		if not is_instance_valid(target) or not is_holding():
+			release(false)
+			return
+		if plumber.state == Plumber.State.RAGDOLL or plumber.state == Plumber.State.FLUSHED:
+			release(false)   # you drop what you carry when you go limp
+			return
+		_carry_pose(shoulder)
 		return
 	if not wants:
 		if is_holding():
@@ -145,6 +161,8 @@ func _try_grab() -> void:
 		if not (col is PhysicsBody3D):
 			continue
 		var pb: PhysicsBody3D = col as PhysicsBody3D
+		if pb.is_in_group("pickups"):
+			continue   # items are picked up with Interact, never snagged by a grab
 		var score: float = 1.0
 		if pb is RigidBody3D:
 			var rb: RigidBody3D = pb as RigidBody3D
@@ -152,18 +170,12 @@ func _try_grab() -> void:
 				score = 0.5        # too heavy to carry, but you can hang on
 			else:
 				score = 3.0
-			if rb.is_in_group("tools") and side == "r":
-				score = 5.0
 		elif pb.is_in_group("grab_handles"):
 			score = 4.0
 		if score > best_score:
 			best_score = score
 			best = pb
 	if best == null:
-		return
-	# Tools go into the right hand as an equipped tool instead of a plain grab.
-	if best.is_in_group("tools") and side == "r" and best.has_method("equip"):
-		best.call("equip", plumber, self)
 		return
 	_attach(hand, best, pos)
 
@@ -209,6 +221,11 @@ func release(throw: bool = false) -> void:
 		var op: Variant = Plumber.of(target)
 		if op is Plumber:
 			(op as Plumber).held_by.erase(plumber)
+		if carrying and target is RigidBody3D:
+			var crb: RigidBody3D = target as RigidBody3D
+			for rb2: RigidBody3D in plumber.body_list:
+				if is_instance_valid(rb2):
+					crb.remove_collision_exception_with(rb2)
 		if throw and target is RigidBody3D:
 			var rb: RigidBody3D = target as RigidBody3D
 			if rb.linear_velocity.length() > 2.0:
@@ -219,6 +236,7 @@ func release(throw: bool = false) -> void:
 		released.emit(target)
 	target = null
 	target_owner = null
+	carrying = false
 	_cooldown = 0.15
 
 
@@ -231,3 +249,72 @@ func drop_tool() -> void:
 	if tool != null and is_instance_valid(tool) and tool.has_method("unequip"):
 		tool.call("unequip")
 	tool = null
+
+
+## Pick up `item` (Interact): it jumps into this hand and is held out in front,
+## locked to the hand, until Interact is pressed again. Returns false if busy.
+func carry(item: RigidBody3D) -> bool:
+	if item == null or not is_instance_valid(item) or tool != null:
+		return false
+	if is_holding():
+		release(false)
+	var hand: RigidBody3D = get_hand_body()
+	if hand == null:
+		return false
+	for rb: RigidBody3D in plumber.body_list:
+		item.add_collision_exception_with(rb)
+	var palm: Vector3 = plumber.get_hand_position(side)
+	var b: Basis = carry_basis(item)
+	var grip: Vector3 = item.call("carry_grip") as Vector3 if item.has_method("carry_grip") else Vector3.ZERO
+	item.global_transform = Transform3D(b, palm - b * grip)
+	item.linear_velocity = hand.linear_velocity
+	item.angular_velocity = Vector3.ZERO
+	item.reset_physics_interpolation()
+	var j: Generic6DOFJoint3D = Generic6DOFJoint3D.new()   # all axes locked by default
+	j.name = "Carry_" + side
+	plumber.add_child(j)
+	j.global_position = palm
+	j.node_a = j.get_path_to(hand)
+	j.node_b = j.get_path_to(item)
+	joint = j
+	target = item
+	carrying = true
+	hold_time = 0.0
+	target_owner = _find_owner(item)
+	if target_owner != null and target_owner.has_method("on_grab"):
+		target_owner.call("on_grab", plumber, side)
+	AudioManager.play_at("grab", palm, -2.0)
+	grabbed.emit(item)
+	return true
+
+
+## How a carried item sits: upright, facing where the plumber faces (pipes turn
+## crossways, like carrying a pipe in both arms).
+func carry_basis(item: Node3D) -> Basis:
+	var up: Vector3 = plumber.local_up
+	var fwd: Vector3 = plumber.facing
+	var right: Vector3 = fwd.cross(up).normalized()
+	var b: Basis = Basis(right, up, -fwd).orthonormalized()
+	if item.has_method("carry_rotation"):
+		b = b * Basis(item.call("carry_rotation") as Quaternion)
+	return b
+
+
+func carried_item() -> Node3D:
+	if carrying and is_instance_valid(target):
+		return target as Node3D
+	return null
+
+
+## Arm held out low in front, elbow bent: a "carrying a box" pose.
+func _carry_pose(shoulder: LimbController) -> void:
+	if shoulder == null:
+		return
+	shoulder.use_world = true
+	var dir: Vector3 = (plumber.facing * 0.85 - plumber.local_up * 0.5).normalized()
+	var chest_q: Quaternion = plumber.chest.global_basis.get_rotation_quaternion()
+	var down_now: Vector3 = chest_q * Vector3.DOWN
+	shoulder.target_world = GravityMath.quat_between(down_now, dir) * chest_q
+	var elbow: LimbController = plumber.limbs.get("elbow_" + side) as LimbController
+	if elbow != null:
+		elbow.target = Quaternion(Vector3.RIGHT, 0.5)

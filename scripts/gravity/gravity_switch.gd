@@ -87,6 +87,10 @@ func get_use_label() -> String:
 	return "PULL"
 
 
+func get_interact_name() -> String:
+	return "Gravity Lever"
+
+
 func interact(p: Plumber) -> void:
 	if not is_host() or not active or cooldown > 0.0:
 		return

@@ -76,6 +76,7 @@ var walk_phase: float = 0.0
 var emote_time: float = 0.0
 var emote_id: int = 0
 var celebrate_time: float = 0.0
+var hand_full_remote: bool = false   ## clients: host says our right hand holds an item/tool
 var held_by: Dictionary = {}         ## Plumber -> true while someone grabs us (M4)
 var flush_count: int = 0
 var grab_time_total: float = 0.0     ## for the silly end-of-level awards
@@ -209,6 +210,7 @@ func apply_puppet_state(new_state: int, flags: int, up: Vector3, vel: Vector3) -
 	boots_on = (flags & SnapshotSync.F_BOOTS_ON) != 0
 	boots_active = (flags & SnapshotSync.F_BOOTS_ACTIVE) != 0
 	celebrate_time = 1.0 if (flags & SnapshotSync.F_CELEBRATE) != 0 else 0.0
+	hand_full_remote = (flags & SnapshotSync.F_HAND_FULL) != 0
 	if (flags & SnapshotSync.F_EMOTE) != 0:
 		emote_time = 1.0
 		emote_id = (flags >> 4) & 7
@@ -259,6 +261,74 @@ func get_tool() -> ToolBase:
 	if not has_tool():
 		return null
 	return (grab_hands["r"] as GrabHand).tool as ToolBase
+
+
+## Right hand busy with something picked up (a tool or a carried item)?
+func is_hand_full() -> bool:
+	if is_puppet:
+		return hand_full_remote
+	return held_item() != null
+
+
+## The tool or item picked up with Interact (null if none / unknown on clients).
+func held_item() -> Node3D:
+	var gh: GrabHand = grab_hands.get("r") as GrabHand
+	if gh == null:
+		return null
+	if gh.tool != null and is_instance_valid(gh.tool):
+		return gh.tool as Node3D
+	return gh.carried_item()
+
+
+## Interact: tools go into the right hand as an equipped tool, anything else is carried.
+func pick_up(item: Node3D) -> bool:
+	var gh: GrabHand = grab_hands.get("r") as GrabHand
+	if gh == null or item == null or not is_instance_valid(item) or is_hand_full():
+		return false
+	if item.has_method("can_pick_up") and not bool(item.call("can_pick_up")):
+		return false
+	if gh.is_holding():
+		gh.release(false)   # the right hand lets go of a ledge to take the item
+	if item is ToolBase:
+		(item as ToolBase).equip(self, gh)
+		return has_tool()
+	if item is RigidBody3D:
+		return gh.carry(item as RigidBody3D)
+	return false
+
+
+## Put the held tool/item down just in front of you.
+func drop_item() -> void:
+	var gh: GrabHand = grab_hands.get("r") as GrabHand
+	if gh == null:
+		return
+	var it: Node3D = held_item()
+	if gh.tool != null and is_instance_valid(gh.tool):
+		gh.drop_tool()
+	elif gh.carrying:
+		gh.release(false)
+	var rb: RigidBody3D = it as RigidBody3D
+	if rb != null and is_instance_valid(rb):
+		rb.linear_velocity = get_velocity() + facing * 1.2 + local_up * 0.8
+	AudioManager.play_at("release", get_center(), -4.0)
+
+
+## What the Interact button does right now (host side; the prompt uses the same query).
+func _do_interact() -> void:
+	var act: Interaction = Interaction.find(self, input.aim)
+	match act.kind:
+		Interaction.Kind.PICKUP:
+			pick_up(act.node)
+		Interaction.Kind.DROP:
+			drop_item()
+		Interaction.Kind.USE_OBJECT:
+			act.node.call("interact", self)
+
+
+## Is the Use button meaningful right now (held tool or a switch in reach)?
+func can_use() -> bool:
+	var tool_in_hand: bool = hand_full_remote if is_puppet else has_tool()
+	return tool_in_hand or find_interactable() != null
 
 
 ## Nearest thing in group "interactables" (switches, buttons...) within reach.
@@ -503,6 +573,8 @@ func _handle_buttons(dt: float) -> void:
 		go_ragdoll(0.8)
 	if _pressed(PlumberInput.GET_UP) and state == State.RAGDOLL and state_time > 0.4:
 		_set_state(State.GETTING_UP)
+	if _pressed(PlumberInput.INTERACT):
+		_do_interact()
 	if _pressed(PlumberInput.USE) and not has_tool():
 		var it: Node3D = find_interactable()
 		if it != null:

@@ -40,6 +40,8 @@ func _physics_process(_dt: float) -> void:
 			bits |= PlumberInput.GET_UP
 		if Input.is_action_pressed("emote"):
 			bits |= PlumberInput.EMOTE
+		if Input.is_action_pressed("interact"):
+			bits |= PlumberInput.INTERACT
 		if SaveData.setting_b("single_grab") and (bits & (PlumberInput.GRAB_L | PlumberInput.GRAB_R)) != 0:
 			bits |= PlumberInput.GRAB_L | PlumberInput.GRAB_R
 		frame.move = mv.limit_length(1.0)

@@ -13,6 +13,7 @@ func _init() -> void:
 	add_to_group("grabbable")
 	add_to_group("props")
 	add_to_group("goo_canister")
+	add_to_group("pickups")
 
 
 func _ready() -> void:
@@ -40,3 +41,16 @@ func _ready() -> void:
 	cs.shape = sh
 	add_child(cs)
 	add_child(GravityBody.new())
+
+
+func can_pick_up() -> bool:
+	return visible and not freeze
+
+
+func get_interact_name() -> String:
+	return "Goo Canister"
+
+
+## Held by its top, hanging below the hand.
+func carry_grip() -> Vector3:
+	return Vector3(0, 0.25, 0)

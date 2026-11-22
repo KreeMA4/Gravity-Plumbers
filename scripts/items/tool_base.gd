@@ -1,10 +1,11 @@
 class_name ToolBase
 extends RigidBody3D
 ## Base class for the four tools. A tool is a normal prop until a plumber
-## grabs it with the RIGHT hand: then it gets "equipped" - glued to the hand
-## with a Generic6DOFJoint3D (all axes locked) so it follows the arm.
+## picks it up with the Interact button ("PICK UP Plunger"): then it gets
+## "equipped" in the RIGHT hand - glued to it with a Generic6DOFJoint3D (all
+## axes locked) so it follows the arm. Grab buttons never pick tools up.
 ## Hold / tap Use to use it (subclasses implement _use_pressed/_use_held).
-## Tap Grab R again to drop it. Lost tools return to their rack after a while.
+## Interact again ("DROP") puts it down. Lost tools return to their rack after a while.
 
 signal used(tool: ToolBase)
 
@@ -32,6 +33,7 @@ func _init() -> void:
 	add_to_group("tools")
 	add_to_group("grabbable")
 	add_to_group("props")
+	add_to_group("pickups")
 
 
 func _ready() -> void:
@@ -45,6 +47,15 @@ func _ready() -> void:
 ## Subclasses add meshes and collision shapes here.
 func _build() -> void:
 	pass
+
+
+## Interaction prompt support ("PICK UP Plunger").
+func can_pick_up() -> bool:
+	return holder == null and visible and _lost_timer < 0.0
+
+
+func get_interact_name() -> String:
+	return display_name
 
 
 ## Label shown on the Use button while holding this tool.

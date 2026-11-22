@@ -74,6 +74,8 @@ var SWING_RAGDOLL_SPEED: float = 9.0    ## Being swung faster than this while he
 # --- Grabbing & carrying -----------------------------------------------------
 var GRAB_RADIUS: float = 0.2            ## Hand sphere radius used to find things to grab.
 var GRAB_ARM_REACH: float = 0.75        ## How far the hand reaches toward the aim point.
+var PICKUP_RANGE: float = 1.9           ## Interact picks up items within this distance (m) of your middle...
+var PICKUP_MIN_DOT: float = 0.35        ## ...that are roughly in front of you (cos of the max angle, about 70 deg).
 var MAX_CARRY_MASS: float = 60.0        ## Heavier dynamic things can't be grabbed (but can be hung from).
 var GRAB_BREAK_FORCE: float = 2500.0    ## Not used by Jolt directly; we break the grab past this stretch.
 var GRAB_BREAK_DISTANCE: float = 0.9    ## Hand-to-grab-point distance that breaks a grab.
