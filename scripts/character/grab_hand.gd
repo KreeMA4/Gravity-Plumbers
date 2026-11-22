@@ -41,6 +41,8 @@ func is_holding() -> bool:
 
 ## Holding something that won't move with us = bracing.
 func is_anchored() -> bool:
+	if tool != null and is_instance_valid(tool) and tool.has_method("is_anchoring") and bool(tool.call("is_anchoring")):
+		return true   # e.g. a plunger stuck to the wall
 	if not is_holding() or not is_instance_valid(target):
 		return false
 	if target is StaticBody3D:

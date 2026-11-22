@@ -30,6 +30,7 @@ func _ready() -> void:
 	_props.name = "Props"
 	add_child(_props)
 	_spawn_crates()
+	ToolRack.build(self, Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3(12, 0, 0)), ["plunger", "wrench", "tape", "gwrench"])
 	# The local player.
 	_local = LocalPlayer.new()
 	add_child(_local)
@@ -128,7 +129,7 @@ func _process(_delta: float) -> void:
 	_info.text = "%s  stiff %.2f  support %.2f  grounded %s  boots %s  braced %s" % [
 		Plumber.State.keys()[p.state], p.joint_stiffness, p.support, str(p.grounded),
 		"ON" if p.boots_active else ("on" if p.boots_on else "off"), str(p.is_braced())]
-	_local.touch.use_label = "USE"
+	_local.touch.use_label = p.get_use_label()
 
 
 func _unhandled_input(event: InputEvent) -> void:

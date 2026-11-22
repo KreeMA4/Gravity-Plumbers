@@ -203,6 +203,44 @@ func go_ragdoll(min_time: float = -1.0) -> void:
 	_set_state(State.RAGDOLL)
 
 
+func has_tool() -> bool:
+	var gh: GrabHand = grab_hands.get("r") as GrabHand
+	return gh != null and gh.tool != null and is_instance_valid(gh.tool)
+
+
+func get_tool() -> ToolBase:
+	if not has_tool():
+		return null
+	return (grab_hands["r"] as GrabHand).tool as ToolBase
+
+
+## Nearest thing in group "interactables" (switches, buttons...) within reach.
+func find_interactable() -> Node3D:
+	var best: Node3D = null
+	var best_d: float = 1.8
+	var c: Vector3 = get_center()
+	for n: Node in get_tree().get_nodes_in_group("interactables"):
+		var n3: Node3D = n as Node3D
+		if n3 == null or not n3.has_method("interact"):
+			continue
+		var d: float = n3.global_position.distance_to(c)
+		if d < best_d:
+			best_d = d
+			best = n3
+	return best
+
+
+## What the Use button would do right now (shown on the button).
+func get_use_label() -> String:
+	var t: ToolBase = get_tool()
+	if t != null:
+		return t.get_use_label()
+	var it: Node3D = find_interactable()
+	if it != null and it.has_method("get_use_label"):
+		return str(it.call("get_use_label"))
+	return "USE"
+
+
 ## A little victory grin + hop (work order done).
 func celebrate() -> void:
 	celebrate_time = 1.5
@@ -405,6 +443,10 @@ func _handle_buttons(dt: float) -> void:
 		go_ragdoll(0.8)
 	if _pressed(PlumberInput.GET_UP) and state == State.RAGDOLL and state_time > 0.4:
 		_set_state(State.GETTING_UP)
+	if _pressed(PlumberInput.USE) and not has_tool():
+		var it: Node3D = find_interactable()
+		if it != null:
+			it.call("interact", self)
 	if _pressed(PlumberInput.EMOTE):
 		start_emote(input.emote_id if input.emote_id > 0 else look.get_v("emote"))
 

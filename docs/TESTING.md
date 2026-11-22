@@ -39,3 +39,13 @@ Tick these off on your phone after each milestone. If anything fails, copy the r
 - [ ] Hold GRAB on the grey bar at chest height while gravity flips: you hang on (braced).
 - [ ] **+ Bots** spawns 3 wandering plumbers. The debug overlay should still show 60 FPS on a mid-range phone.
 - [ ] Walk off into space if you can (through a window gap, or with gravity pointing at the window): you get flushed and respawn after 3 s.
+
+## M4: Grab and tools
+- [ ] In the Ragdoll Playground, walk to the yellow **TOOLS** rack (to your right). Hold **GRAB R** on a tool: it snaps into your right hand and the Use button label changes.
+- [ ] Tap **GRAB R** again: you drop the tool.
+- [ ] **Plunger:** aim at a wall and tap USE (label "STICK"): it sticks. Now tap **Gravity**: you don't tumble (braced). Release USE to unstick.
+- [ ] **Pipe wrench:** walk up to a bot and tap USE ("BONK"): the bot goes floppy and stars pop.
+- [ ] **Duct tape:** tap USE on a crate: it freezes in place for about 10 s.
+- [ ] **G-Wrench:** aim at a crate and tap USE ("ZAP"): a cyan beam appears and the crate falls toward the direction you aimed for 8 s. The label then counts down the 15 s cooldown. Aim at the ceiling and ZAP: YOU fall up onto the ceiling for 8 s.
+- [ ] Hold GRAB on a bot, then swing around: the bot flails, and letting go throws it.
+- [ ] Throw a tool out of the window: about 20 s later it reappears on the rack with a sparkle.
