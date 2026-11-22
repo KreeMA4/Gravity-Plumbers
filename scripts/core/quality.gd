@@ -13,7 +13,7 @@ signal low_fps_detected
 const PRESETS: Dictionary = {
 	"low": {"render_scale": 0.7, "shadows": false, "blob_shadows": false, "simple_ragdoll": true,
 		"outlines_on_props": false, "outlines_on_players": true, "particles": 0.4, "msaa": false},
-	"medium": {"render_scale": 0.85, "shadows": false, "blob_shadows": true, "simple_ragdoll": false,
+	"medium": {"render_scale": 0.85, "shadows": true, "blob_shadows": true, "simple_ragdoll": false,
 		"outlines_on_props": false, "outlines_on_players": true, "particles": 0.7, "msaa": false},
 	"high": {"render_scale": 1.0, "shadows": true, "blob_shadows": true, "simple_ragdoll": false,
 		"outlines_on_props": true, "outlines_on_players": true, "particles": 1.0, "msaa": false},

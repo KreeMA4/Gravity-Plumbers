@@ -12,6 +12,8 @@ const TEST_FILES: Array = [
 	"res://tests/net_codec_test.gd",
 	"res://tests/look_test.gd",
 	"res://tests/joystick_test.gd",
+	"res://tests/gait_test.gd",
+	"res://tests/interaction_test.gd",
 ]
 
 

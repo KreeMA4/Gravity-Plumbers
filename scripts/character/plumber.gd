@@ -72,7 +72,11 @@ var boots_on: bool = false
 var boots_active: bool = false       ## boots on AND stuck to a surface
 var boots_charge: float = 6.0
 var boots_normal: Vector3 = Vector3.UP
-var walk_phase: float = 0.0
+var walk_phase: float = 0.0          ## gait cycle (radians); left leg at walk_phase, right at +PI
+var gait_amount: float = 0.0         ## 0 standing .. 1 full stride (smoothed)
+var gait_run: float = 0.0            ## 0 walk .. 1 run (smoothed)
+var gait_ride: float = 0.86          ## pelvis ride height the gait asks for this tick
+var land_squash: float = 0.0         ## > 0 right after a landing: knees soak it up
 var emote_time: float = 0.0
 var emote_id: int = 0
 var celebrate_time: float = 0.0
@@ -94,6 +98,12 @@ var _prev_v_chest: Vector3 = Vector3.ZERO
 var _skip_impact: int = 2
 var _was_grounded: bool = false
 var _exclude: Array[RID] = []
+var _leg_l1: float = 0.38            ## thigh length
+var _leg_l2: float = 0.38            ## knee to sole
+var _hip_off: Dictionary = {}        ## side -> hip joint, local to the pelvis
+var _sole_off: Dictionary = {}       ## side -> sole point, local to the foot body
+var _stance_prev: Dictionary = {"l": true, "r": true}
+var _land_t: float = 0.0
 
 
 ## The plumber a physics body belongs to, or null. (Uses has_meta first:
@@ -149,6 +159,7 @@ func _ready() -> void:
 	boots_charge = Tuning.BOOTS_CHARGE_MAX
 	local_up = spawn_transform.basis.y.normalized()
 	facing = -spawn_transform.basis.z.normalized()
+	_setup_leg_geometry()
 	_setup_grab_hands()
 	if Quality.blob_shadows:
 		_blob = MeshInstance3D.new()
@@ -161,6 +172,38 @@ func _ready() -> void:
 		_blob.top_level = true
 		add_child(_blob)
 	GravityManager.shift_started.connect(_on_gravity_shift)
+
+
+## Leg measurements for the gait IK (must match RagdollBuilder's proportions).
+func _setup_leg_geometry() -> void:
+	var sc: Vector4 = PlumberLook.build_scales(look.get_v("build") if look != null else 0)
+	var hs: float = sc.x
+	var ws: float = sc.y
+	var hip_y: float = 0.76 * hs
+	if simple_rig:
+		_leg_l1 = hip_y * 0.5
+		_leg_l2 = hip_y * 0.5
+	else:
+		_leg_l1 = hip_y - 0.38 * hs
+		_leg_l2 = 0.38 * hs
+	for side: String in ["l", "r"]:
+		var sx: float = -1.0 if side == "l" else 1.0
+		_hip_off[side] = Vector3(sx * 0.1 * ws, hip_y - 0.86 * hs, 0)
+		if simple_rig:
+			var leg_len: float = hip_y - 0.08
+			_sole_off[side] = Vector3(0, -leg_len * 0.5 - 0.08, -0.05)
+		else:
+			var sh_len: float = 0.38 * hs - 0.07
+			_sole_off[side] = Vector3(0, -sh_len * 0.5 - 0.07, -0.05)
+	gait_ride = Tuning.RIDE_HEIGHT * height_scale
+
+
+## World position of the bottom of a foot (tests and footstep effects).
+func foot_sole_position(side: String) -> Vector3:
+	var foot: RigidBody3D = bodies.get(RagdollBuilder.foot_name(side, simple_rig)) as RigidBody3D
+	if foot == null:
+		return get_center()
+	return foot.global_transform * (_sole_off.get(side, Vector3.ZERO) as Vector3)
 
 
 ## One GrabHand per arm (see grab_hand.gd).
@@ -556,6 +599,10 @@ func _probe_ground() -> void:
 	grounded = ground_dist <= Tuning.RIDE_HEIGHT * height_scale + 0.2 and ground_normal.dot(local_up) > 0.45
 	if grounded and not _was_grounded and state == State.ACTIVE:
 		landed.emit(self)
+		var fall: float = -pelvis.linear_velocity.dot(local_up)
+		if fall > 1.0:
+			_land_t = 0.3
+			land_squash = clampf(fall / 7.0, 0.15, 1.0)
 		if pelvis.linear_velocity.dot(local_up) < -2.5:
 			AudioManager.play_at("land", get_center(), -4.0)
 			FX.dust(get_parent(), hit["position"] as Vector3, local_up)
@@ -621,7 +668,7 @@ func _apply_support(dt: float) -> void:
 		return
 	var up: Vector3 = local_up
 	if grounded and _no_hover <= 0.0:
-		var ride: float = Tuning.RIDE_HEIGHT * height_scale
+		var ride: float = gait_ride
 		var v_up: float = pelvis.linear_velocity.dot(up)
 		var g: Vector3 = GravityManager.get_gravity_at(pelvis.global_position)
 		var hold: float = -g.dot(up)
@@ -640,9 +687,16 @@ func _apply_support(dt: float) -> void:
 	var target: Basis = _target_basis(up, facing)
 	var tq: Quaternion = target.get_rotation_quaternion()
 	var k: float = support
-	_upright(pelvis, tq, k, dt)
-	var lean: float = -0.12 * clampf(move_dir.length(), 0.0, 1.0)
-	_upright(chest, tq * Quaternion(Vector3.RIGHT, lean), k * 0.8, dt)
+	# Weight shift: the hips roll a little toward the planted foot while walking.
+	var roll: float = 0.0
+	if grounded:
+		roll = -sin(walk_phase) * 0.06 * gait_amount * (1.0 - gait_run)
+	_upright(pelvis, tq * Quaternion(Vector3.BACK, roll), k, dt)
+	# Lean into the movement: a little when walking, more when running.
+	var lean: float = -(0.06 + 0.2 * gait_run) * gait_amount - 0.06 * clampf(move_dir.length(), 0.0, 1.0)
+	if not grounded:
+		lean = -0.12 * clampf(move_dir.length(), 0.0, 1.0)
+	_upright(chest, tq * Quaternion(Vector3.RIGHT, lean) * Quaternion(Vector3.BACK, -roll * 0.6), k * 0.8, dt)
 
 
 func _upright(rb: RigidBody3D, goal: Quaternion, k: float, dt: float) -> void:
@@ -707,15 +761,6 @@ func _apply_movement(dt: float) -> void:
 	accel = accel.limit_length(Tuning.WALK_ACCEL * speed_max * 1.5)
 	pelvis.apply_central_force(accel * total_mass * 0.6)
 	chest.apply_central_force(accel * total_mass * 0.4)
-	if grounded:
-		var before: float = walk_phase
-		walk_phase += dt * v_h.length() * Tuning.WALK_CYCLE_RATE * PI * 0.5
-		# A squelchy rubber footstep each time a foot comes down.
-		if floori(before / PI) != floori(walk_phase / PI) and v_h.length() > 0.6:
-			var side: String = "l" if floori(walk_phase / PI) % 2 == 0 else "r"
-			var foot: RigidBody3D = bodies.get(RagdollBuilder.foot_name(side, simple_rig)) as RigidBody3D
-			var at: Vector3 = foot.global_position if foot != null else get_center()
-			AudioManager.play_at("footstep", at, -10.0, 1.0, 0.15)
 
 
 func _apply_jump(dt: float) -> void:
@@ -752,8 +797,10 @@ func _any_grab_held() -> bool:
 	return input.held(PlumberInput.GRAB_L) or input.held(PlumberInput.GRAB_R)
 
 
-## Procedural poses: walk cycle, air flail, emotes. Grab arms are aimed by GrabHand.
-func _update_limb_targets(_dt: float) -> void:
+## Procedural poses: gait (walk/run with planted feet), jump/fall/land, idle,
+## emotes. Grab arms are aimed by GrabHand. All of these are only TARGETS for
+## the joint muscles (LimbController), so the body stays fully physical.
+func _update_limb_targets(dt: float) -> void:
 	var ident: Quaternion = Quaternion.IDENTITY
 	if state == State.RAGDOLL:
 		for role: Variant in limbs.keys():
@@ -761,39 +808,113 @@ func _update_limb_targets(_dt: float) -> void:
 			lc.target = ident
 			lc.use_world = false
 		return
+	var up: Vector3 = local_up
 	var v: Vector3 = pelvis.linear_velocity
-	var v_h: Vector3 = v - local_up * v.dot(local_up)
-	var spd: float = clampf(v_h.length() / Tuning.WALK_SPEED, 0.0, 1.0)
-	var s: float = sin(walk_phase)
-	var c: float = cos(walk_phase)
+	var v_up: float = v.dot(up)
+	var v_h: Vector3 = v - up * v_up
+	var speed: float = v_h.length()
 	var airborne: bool = not grounded and not in_zero_g
-	var leg_swing: float = s * Tuning.WALK_LEG_SWING * spd
-	_set_target("hip_l", Quaternion(Vector3.RIGHT, leg_swing if not airborne else 0.5))
-	_set_target("hip_r", Quaternion(Vector3.RIGHT, -leg_swing if not airborne else -0.2))
-	_set_target("knee_l", Quaternion(Vector3.RIGHT, -(maxf(0.0, c) * 1.1 * spd + 0.08) if not airborne else -0.9))
-	_set_target("knee_r", Quaternion(Vector3.RIGHT, -(maxf(0.0, -c) * 1.1 * spd + 0.08) if not airborne else -0.4))
-	_set_target("spine", ident)
-	_set_target("neck", ident)
-	var arm_swing: float = s * Tuning.WALK_ARM_SWING * spd
+	# --- gait state (smoothed so idle <-> walk <-> run blend) ---
+	var on_feet: bool = grounded and not in_zero_g
+	gait_amount = move_toward(gait_amount, Gait.amount(speed) if on_feet else 0.0, dt * 4.0)
+	gait_run = move_toward(gait_run, Gait.run_blend(speed), dt * 2.5)
+	var duty: float = Gait.duty(gait_run)
+	if on_feet:
+		walk_phase = fposmod(walk_phase + TAU * Gait.cadence(speed, height_scale) * dt, TAU * 64.0)
+	_land_t = maxf(0.0, _land_t - dt)
+	var squash: float = land_squash * (_land_t / 0.3)
+	# Stride direction in the pelvis frame (feet step the way you actually move).
+	var pinv: Basis = pelvis.global_basis.orthonormalized().inverse()
+	var dir_l: Vector3 = pinv * v_h
+	dir_l.y = 0.0
+	var dir2: Vector3 = dir_l.normalized() if dir_l.length() > 0.05 else Vector3.FORWARD
+	var half: float = Gait.stance_length(speed, height_scale) * 0.5 * gait_amount
+	var lift_h: float = Gait.lift_height(gait_run, height_scale) * gait_amount
+	var hip_h: float = Gait.hip_height_for(0.0, _leg_l1, _leg_l2)
+	var cyc: Dictionary = {}
+	for side: String in ["l", "r"]:
+		var ph: float = walk_phase + (0.0 if side == "l" else PI)
+		var fc: Vector2 = Gait.foot_cycle(ph, duty)
+		cyc[side] = fc
+		var stance: bool = Gait.in_stance(ph, duty)
+		if stance:
+			# The pelvis rides only as high as the planted leg reaches: the walk bob.
+			hip_h = minf(hip_h, Gait.hip_height_for(fc.x * half, _leg_l1, _leg_l2))
+			if not bool(_stance_prev[side]) and gait_amount > 0.4 and on_feet:
+				# A squelchy rubber footstep each time a foot comes down.
+				AudioManager.play_at("footstep", foot_sole_position(side), -10.0, 1.0, 0.15)
+		_stance_prev[side] = stance
+	hip_h -= (0.035 * gait_run * gait_amount + 0.16 * squash) * height_scale   # run crouch, landing squash
+	gait_ride = hip_h - (_hip_off["l"] as Vector3).y
+	# --- legs ---
+	if on_feet:
+		var hip_above: float = ground_dist + (_hip_off["l"] as Vector3).y
+		for side: String in ["l", "r"]:
+			var fc2: Vector2 = cyc[side]
+			# Foot target relative to the hip joint (pelvis frame: +x right, +y up, -z forward).
+			var foot: Vector3 = dir2 * (fc2.x * half) + Vector3(0, -hip_above + fc2.y * lift_h, 0)
+			var down: float = maxf(-foot.y, 0.05)
+			var abd: float = atan2(foot.x, down)
+			var sag_down: float = sqrt(foot.x * foot.x + down * down)
+			var ik: Vector2
+			if simple_rig:
+				ik = Vector2(atan2(-foot.z, sag_down), 0.0)   # one-piece legs can't bend
+			else:
+				ik = Gait.leg_ik(-foot.z, sag_down, _leg_l1, _leg_l2)
+			_set_target("hip_" + side, Quaternion(Vector3.BACK, abd) * Quaternion(Vector3.RIGHT, ik.x))
+			_set_target("knee_" + side, Quaternion(Vector3.RIGHT, ik.y))
+	elif in_zero_g:
+		var drift: float = sin(state_time * 1.6) * 0.15
+		_set_target("hip_l", Quaternion(Vector3.RIGHT, 0.25 + drift))
+		_set_target("hip_r", Quaternion(Vector3.RIGHT, 0.1 - drift))
+		_set_target("knee_l", Quaternion(Vector3.RIGHT, -0.6))
+		_set_target("knee_r", Quaternion(Vector3.RIGHT, -0.45))
+	elif v_up > 0.5:
+		# Jumping up: tuck the knees.
+		_set_target("hip_l", Quaternion(Vector3.RIGHT, 1.0))
+		_set_target("hip_r", Quaternion(Vector3.RIGHT, 0.35))
+		_set_target("knee_l", Quaternion(Vector3.RIGHT, -1.5))
+		_set_target("knee_r", Quaternion(Vector3.RIGHT, -0.75))
+	else:
+		# Falling: legs reach down for the floor, the faster the straighter.
+		var fall: float = clampf(-v_up / 6.0, 0.0, 1.0)
+		_set_target("hip_l", Quaternion(Vector3.RIGHT, lerpf(0.6, 0.22, fall)))
+		_set_target("hip_r", Quaternion(Vector3.RIGHT, lerpf(0.1, -0.12, fall)))
+		_set_target("knee_l", Quaternion(Vector3.RIGHT, lerpf(-1.0, -0.3, fall)))
+		_set_target("knee_r", Quaternion(Vector3.RIGHT, lerpf(-0.6, -0.25, fall)))
+	# --- torso: breathing when idle, head up when running, squash on landing ---
+	var breathe: float = sin(state_time * 2.2) * 0.035 * (1.0 - gait_amount)
+	_set_target("spine", Quaternion(Vector3.RIGHT, breathe - 0.25 * squash))
+	_set_target("neck", Quaternion(Vector3.RIGHT, 0.1 * gait_run * gait_amount + 0.15 * squash))
+	# --- arms ---
 	for side: String in ["l", "r"]:
 		var sx: float = -1.0 if side == "l" else 1.0
 		var shoulder: Quaternion
+		var elbow: float
 		if airborne:
-			# Arms flail upward when falling (comedy!).
-			var flap: float = sin(state_time * 14.0 + sx) * 0.4
-			shoulder = Quaternion(Vector3.BACK, sx * (2.0 + flap))
+			if v_up < -2.0:
+				# Arms flail upward when falling (comedy!).
+				var flap: float = sin(state_time * 14.0 + sx) * 0.4
+				shoulder = Quaternion(Vector3.BACK, sx * (2.0 + flap))
+			else:
+				shoulder = Quaternion(Vector3.BACK, sx * 1.25) * Quaternion(Vector3.RIGHT, 0.35)   # arms up for balance
+			elbow = 0.6
 		elif in_zero_g:
 			shoulder = Quaternion(Vector3.BACK, sx * 1.2) * Quaternion(Vector3.RIGHT, sin(state_time * 3.0 + sx) * 0.3)
+			elbow = 0.5
 		else:
-			# Arms swing opposite to the leg on the same side.
-			var swing: float = -arm_swing if side == "l" else arm_swing
-			shoulder = Quaternion(Vector3.RIGHT, swing) * Quaternion(Vector3.BACK, sx * 0.14)
+			# Arms swing opposite to the leg on the same side; bigger and bent when running.
+			var fc3: Vector2 = cyc[side]
+			var swing: float = -fc3.x * lerpf(0.35, 0.8, gait_run) * gait_amount
+			var sway: float = sin(state_time * 1.7 + sx) * 0.035 * (1.0 - gait_amount)
+			shoulder = Quaternion(Vector3.RIGHT, swing + sway) * Quaternion(Vector3.BACK, sx * (0.13 + 0.08 * gait_run + 0.3 * squash))
+			elbow = 0.3 + gait_amount * lerpf(0.25, 1.15, gait_run)
 		if emote_time > 0.0:
 			shoulder = _emote_pose(side, sx)
 		elif celebrate_time > 0.0:
 			shoulder = Quaternion(Vector3.BACK, sx * (2.6 + sin(state_time * 12.0) * 0.2))
 		_set_target("shoulder_" + side, shoulder)
-		_set_target("elbow_" + side, Quaternion(Vector3.RIGHT, 0.35 + spd * 0.35))
+		_set_target("elbow_" + side, Quaternion(Vector3.RIGHT, elbow))
 
 
 func _emote_pose(side: String, sx: float) -> Quaternion:

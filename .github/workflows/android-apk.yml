@@ -209,11 +209,15 @@ jobs:
           "$GODOT" --verbose --path . --rendering-driver opengl3 --audio-driver Dummy --fixed-fps 60
           -s res://tests/touch_e2e_test.gd -- --shots=$PWD/ci_screens
 
-      - name: Screenshot report (exposure stats + thumbnails in the log)
-        if: always()
-        run: |
-          pip install --quiet pillow
-          ls ci_screens/*.png > /dev/null 2>&1 && python3 tools/ci/thumbs.py ci_screens/*.png || echo "no screenshots"
+      - name: Gameplay end-to-end test (pickup, grabs, tools, walk/run/jump/fall, ragdoll, gravity)
+        # Real physics in the Ragdoll Playground: deliberate pickup only, Grab L/R still
+        # work, feet touch the ground and don't skate, walk -> run, stops, jump/land,
+        # ragdoll recovery, walking on a wall and the ceiling. Saves anim_* screenshots.
+        run: >
+          xvfb-run -a -s "-screen 0 1920x1080x24" python3 tools/ci/run_godot.py --quiet --show "^  (ok|FAIL|shot|info|failed)|GAMEPLAY E2E" --name "gameplay e2e"
+          --log ci_logs/gameplay_e2e.log --timeout 900 --expect "GAMEPLAY E2E PASSED" --
+          "$GODOT" --verbose --path . --rendering-driver opengl3 --audio-driver Dummy --fixed-fps 60
+          -s res://tests/gameplay_e2e_test.gd -- --shots=$PWD/ci_screens
 
       # -------------------------------------------------------------- export
       - name: Export Android debug APK (fresh, this run only)
@@ -332,3 +336,11 @@ jobs:
             ~/.local/share/godot/app_userdata/Gravity Plumbers/logs/
           if-no-files-found: ignore
           retention-days: 14
+
+      - name: Screenshot report (exposure stats + thumbnails in the log)
+        if: always()
+        env:
+          THUMBS: level_bathroom,level_cafeteria,level_reactor,playground,anim_idle,anim_walk,anim_run,pickup_prompt
+        run: |
+          pip install --quiet pillow
+          ls ci_screens/*.png > /dev/null 2>&1 && python3 tools/ci/thumbs.py ci_screens/*.png || echo "no screenshots"

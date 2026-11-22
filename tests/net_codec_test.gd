@@ -27,6 +27,10 @@ func test_input_packet() -> void:
 	check(out.aim.distance_to(inp.aim) < 0.03, "aim survives")
 	check_eq(out.buttons, inp.buttons, "buttons survive")
 	check_eq(out.emote_id, 3, "emote survives")
+	# The Interact bit (256) rides in the packet's spare byte.
+	inp.buttons = PlumberInput.INTERACT | PlumberInput.USE | PlumberInput.EMOTE
+	var out2: PlumberInput = PlumberInput.from_bytes(inp.to_bytes())
+	check_eq(out2.buttons, inp.buttons, "Interact bit survives the network packet")
 	var junk: PlumberInput = PlumberInput.from_bytes(PackedByteArray([1, 2]))
 	check_eq(junk.buttons, 0, "short packet is ignored safely")
 

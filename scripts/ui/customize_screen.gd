@@ -148,11 +148,13 @@ func _build_stage() -> void:
 	e.background_color = Color(0.12, 0.13, 0.27)
 	e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	e.ambient_light_color = Color(0.7, 0.72, 0.9)
-	e.ambient_light_energy = 0.6
+	LevelBuilder.apply_exposure(e)
+	e.ambient_light_energy = 0.6   # the turntable has no walls to bounce light: a bit more fill
 	env.environment = e
 	_viewport.add_child(env)
 	var light: DirectionalLight3D = DirectionalLight3D.new()
 	light.rotation = Vector3(-0.7, 0.5, 0)
+	light.light_energy = 0.9
 	_viewport.add_child(light)
 	var floor_m: MeshInstance3D = MeshInstance3D.new()
 	var cm: CylinderMesh = CylinderMesh.new()

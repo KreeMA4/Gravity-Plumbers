@@ -8,11 +8,18 @@ extends RefCounted
 
 const WALL_T: float = 0.4
 
+## Lighting budget (Linear tone mapping, so what we set is what you see):
+## a fully lit surface gets ambient + sun ~= 1.1 x its colour, the shadow side
+## ~0.4 x. Palette colours stay below ~0.85 so nothing burns out to white.
+const AMBIENT_ENERGY: float = 0.5
+const SUN_ENERGY: float = 0.8
+const LAMP_ENERGY: float = 0.4
+
 const DEFAULT_PALETTE: Dictionary = {
-	"floor": Color(0.36, 0.4, 0.56),
-	"wall": Color(0.82, 0.84, 0.9),
-	"ceiling": Color(0.55, 0.58, 0.7),
-	"trim": Color(0.25, 0.28, 0.42),
+	"floor": Color(0.3, 0.38, 0.6),
+	"wall": Color(0.66, 0.71, 0.82),
+	"ceiling": Color(0.45, 0.49, 0.64),
+	"trim": Color(0.95, 0.68, 0.2),
 	"lamp": Color(1.0, 0.95, 0.8),
 	"ambient": Color(0.62, 0.66, 0.9),
 	"nebula_a": Color(0.35, 0.1, 0.45),
@@ -51,22 +58,52 @@ static func build_environment(parent: Node, palette: Dictionary) -> Dictionary:
 	e.sky = sky
 	e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	e.ambient_light_color = palette_color(palette, "ambient")
-	e.ambient_light_energy = 0.55
-	e.reflected_light_source = Environment.REFLECTION_SOURCE_DISABLED
-	e.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	apply_exposure(e)
 	var we: WorldEnvironment = WorldEnvironment.new()
 	we.environment = e
 	parent.add_child(we)
 	var sun: DirectionalLight3D = DirectionalLight3D.new()
 	sun.name = "Sun"
 	sun.rotation = Vector3(-0.95, 0.55, 0.0)
-	sun.light_energy = 1.15
-	sun.light_color = Color(1.0, 0.97, 0.92)
-	sun.shadow_enabled = Quality.shadows
-	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
-	sun.directional_shadow_max_distance = 30.0
+	setup_sun(sun)
 	parent.add_child(sun)
 	return {"sky_material": sky_mat, "sun": sun, "environment": e}
+
+
+## Exposure shared by every 3D scene (levels, test rooms, the customise stage).
+## Linear tone mapping keeps the cartoon colours pure; the old Filmic setup with
+## white = 1.0 clipped everything brighter than 1 to flat white.
+static func apply_exposure(e: Environment) -> void:
+	e.ambient_light_energy = AMBIENT_ENERGY
+	e.reflected_light_source = Environment.REFLECTION_SOURCE_DISABLED
+	e.tonemap_mode = Environment.TONE_MAPPER_LINEAR
+	e.tonemap_exposure = 1.0
+	e.glow_enabled = false
+
+
+## The one shadow-casting light. Soft-edged shadows ground objects on the floor.
+static func setup_sun(sun: DirectionalLight3D) -> void:
+	sun.light_energy = SUN_ENERGY
+	sun.light_color = Color(1.0, 0.96, 0.9)
+	sun.shadow_enabled = Quality.shadows
+	sun.shadow_blur = 1.5
+	sun.shadow_bias = 0.04
+	sun.shadow_normal_bias = 1.5
+	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
+	sun.directional_shadow_max_distance = 30.0
+
+
+## Floors get tiles, walls panels, ceilings big panels; all without the rim glow.
+static func surface_material(palette: Dictionary, key: String) -> Material:
+	var col: Color = palette_color(palette, key)
+	match key:
+		"floor":
+			return Mats.surface(col, 1, 1.0, 0.16)
+		"wall":
+			return Mats.surface(col, 2, 1.25, 0.12)
+		"ceiling":
+			return Mats.surface(col, 2, 2.0, 0.1)
+	return Mats.surface(col)
 
 
 ## Build one box room. spec keys:
@@ -90,7 +127,7 @@ static func build_room(parent: Node, spec: Dictionary, palette: Dictionary) -> N
 			if (o as Dictionary).get("wall", "") == wall_id:
 				wall_openings.append(o)
 		var key: String = "floor" if wall_id == "-y" else ("ceiling" if wall_id == "+y" else "wall")
-		_build_wall(root, c, s, wall_id, wall_openings, palette_color(palette, key))
+		_build_wall(root, c, s, wall_id, wall_openings, palette_color(palette, key), surface_material(palette, key))
 	_build_edges(root, c, s, skip, palette_color(palette, "trim"))
 	if bool(spec.get("lamp", true)):
 		_build_lamp(root, c + Vector3(0, s.y * 0.5 - 0.1, 0), s, palette)
@@ -116,7 +153,7 @@ static func _wall_extent(wall_id: String, s: Vector3) -> Vector2:
 	return Vector2(s.x, s.y)
 
 
-static func _build_wall(parent: Node3D, c: Vector3, s: Vector3, wall_id: String, openings: Array, color: Color) -> void:
+static func _build_wall(parent: Node3D, c: Vector3, s: Vector3, wall_id: String, openings: Array, color: Color, mat: Material = null) -> void:
 	var ax: Array = _axes(wall_id)
 	var u: Vector3 = ax[0]
 	var v: Vector3 = ax[1]
@@ -142,24 +179,24 @@ static func _build_wall(parent: Node3D, c: Vector3, s: Vector3, wall_id: String,
 		var vmin: float = clampf(float(ra[2]), -hv, hv)
 		var vmax: float = clampf(float(ra[3]), -hv, hv)
 		if umin > cur + 0.001:
-			_wall_piece(parent, wall_center, u, v, n, cur, umin, -hv, hv, color)
+			_wall_piece(parent, wall_center, u, v, n, cur, umin, -hv, hv, color, mat)
 		if vmin > -hv + 0.001:
-			_wall_piece(parent, wall_center, u, v, n, umin, umax, -hv, vmin, color)
+			_wall_piece(parent, wall_center, u, v, n, umin, umax, -hv, vmin, color, mat)
 		if vmax < hv - 0.001:
-			_wall_piece(parent, wall_center, u, v, n, umin, umax, vmax, hv, color)
+			_wall_piece(parent, wall_center, u, v, n, umin, umax, vmax, hv, color, mat)
 		if bool(ra[4]):
 			_window(parent, wall_center, u, v, n, umin, umax, vmin, vmax)
 		cur = maxf(cur, umax)
 	if cur < hu - 0.001:
-		_wall_piece(parent, wall_center, u, v, n, cur, hu, -hv, hv, color)
+		_wall_piece(parent, wall_center, u, v, n, cur, hu, -hv, hv, color, mat)
 
 
 static func _wall_piece(parent: Node3D, wc: Vector3, u: Vector3, v: Vector3, n: Vector3,
-		umin: float, umax: float, vmin: float, vmax: float, color: Color) -> void:
+		umin: float, umax: float, vmin: float, vmax: float, color: Color, mat: Material = null) -> void:
 	var center: Vector3 = wc + u * (umin + umax) * 0.5 + v * (vmin + vmax) * 0.5
 	var size: Vector3 = u * (umax - umin) + v * (vmax - vmin) + n * WALL_T
 	size = Vector3(absf(size.x), absf(size.y), absf(size.z))
-	var sb: StaticBody3D = Geo.static_box(parent, center, size, color)
+	var sb: StaticBody3D = Geo.static_box(parent, center, size, color, Vector3.ZERO, mat)
 	sb.add_to_group("level_static")
 
 
@@ -210,7 +247,7 @@ static func _window(parent: Node3D, wc: Vector3, u: Vector3, v: Vector3, n: Vect
 
 ## Rounded look: chunky cylinders along the floor and ceiling edges.
 static func _build_edges(parent: Node3D, c: Vector3, s: Vector3, skip: Array, color: Color) -> void:
-	var mat: Material = Mats.toon(color)
+	var mat: Material = Mats.toon(color, false, 0.025, 0.15)
 	var r: float = 0.22
 	var h: Vector3 = s * 0.5
 	for y_sign: float in [-1.0, 1.0]:
@@ -255,7 +292,8 @@ static func _build_lamp(parent: Node3D, pos: Vector3, room_size: Vector3, palett
 		var omni: OmniLight3D = OmniLight3D.new()
 		omni.position = pos - Vector3(0, 0.6, 0)
 		omni.omni_range = maxf(room_size.x, room_size.z) * 0.8
-		omni.light_energy = 0.6
+		omni.light_energy = LAMP_ENERGY
+		omni.omni_attenuation = 0.8   # soft pool of light, no hot spot
 		omni.light_color = lamp_col
 		omni.shadow_enabled = false
 		parent.add_child(omni)

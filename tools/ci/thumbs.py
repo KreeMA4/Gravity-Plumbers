@@ -9,8 +9,9 @@ it is, and writes a table to $GITHUB_STEP_SUMMARY:
   clip%    share of pixels with any channel at >= 0.99 (blown out)
   sat      mean HSV saturation (0 = grey, 1 = pure colour)
   lum      mean luminance;  contrast = luminance standard deviation
-It also prints each image as a small base64 JPEG ("THUMB name i/n data") so
-the pictures can be looked at from the job log alone.
+With THUMBS="name1,name2,..." it also prints one small contact-sheet JPEG of
+those shots as base64 ("THUMB sheet i/n data"), so the pictures can be looked
+at from the job log alone. The STATS lines come last.
 Needs Pillow (pip install pillow).
 """
 import base64
@@ -44,23 +45,40 @@ def stats(img):
             "lum": mean, "contrast": var ** 0.5}
 
 
+def contact_sheet(paths, names, cell_w=240):
+    """One small JPEG with the chosen shots in a grid (cheap to view from the log)."""
+    picks = [p for n in names for p in paths if os.path.splitext(os.path.basename(p))[0] == n]
+    if not picks:
+        return None
+    cell_h = cell_w * 9 // 16
+    cols = 4
+    rows = (len(picks) + cols - 1) // cols
+    sheet = Image.new("RGB", (cell_w * cols, cell_h * rows), (0, 0, 0))
+    for i, p in enumerate(picks):
+        im = Image.open(p).convert("RGB").resize((cell_w, cell_h))
+        sheet.paste(im, ((i % cols) * cell_w, (i // cols) * cell_h))
+    buf = io.BytesIO()
+    sheet.save(buf, "JPEG", quality=58)
+    return buf.getvalue()
+
+
 def main(paths):
     rows = []
     for p in sorted(paths):
         name = os.path.splitext(os.path.basename(p))[0]
-        img = Image.open(p)
-        s = stats(img)
-        rows.append((name, s))
-        print("STATS %-28s white %5.1f%%  clip %5.1f%%  sat %.2f  lum %.2f  contrast %.2f"
-              % (name, s["white"], s["clip"], s["sat"], s["lum"], s["contrast"]))
-        th = img.convert("RGB")
-        th.thumbnail((480, 480))
-        buf = io.BytesIO()
-        th.save(buf, "JPEG", quality=62)
-        data = base64.b64encode(buf.getvalue()).decode()
-        chunks = [data[i:i + 3000] for i in range(0, len(data), 3000)]
+        rows.append((name, stats(Image.open(p))))
+    names = [n for n in os.environ.get("THUMBS", "").split(",") if n]
+    data = contact_sheet(paths, names) if names else None
+    if data:
+        b = base64.b64encode(data).decode()
+        chunks = [b[i:i + 3000] for i in range(0, len(b), 3000)]
         for i, c in enumerate(chunks):
-            print("THUMB %s %d/%d %s" % (name, i + 1, len(chunks), c))
+            print("THUMB sheet %d/%d %s" % (i + 1, len(chunks), c))
+        print("THUMB order: " + ", ".join(n for n in names))
+    # Numbers last, so the end of the job log shows them.
+    for name, s in rows:
+        print("STATS %-26s white %5.1f%%  clip %5.1f%%  sat %.2f  lum %.2f  contrast %.2f"
+              % (name, s["white"], s["clip"], s["sat"], s["lum"], s["contrast"]))
     summary = os.environ.get("GITHUB_STEP_SUMMARY")
     if summary:
         with open(summary, "a") as f:

@@ -12,8 +12,8 @@ static func data() -> Dictionary:
 		"start_gravity": Vector3.DOWN,
 		"bounds": {"center": Vector3(0, 3, 0), "radius": 40.0},
 		"palette": {
-			"floor": Color(0.45, 0.32, 0.28), "wall": Color(0.9, 0.82, 0.7), "ceiling": Color(0.6, 0.5, 0.45),
-			"trim": Color(0.55, 0.3, 0.2), "lamp": Color(1.0, 0.9, 0.7), "ambient": Color(0.75, 0.68, 0.7),
+			"floor": Color(0.5, 0.31, 0.2), "wall": Color(0.84, 0.7, 0.52), "ceiling": Color(0.54, 0.41, 0.34),
+			"trim": Color(0.68, 0.28, 0.16), "lamp": Color(1.0, 0.9, 0.7), "ambient": Color(0.82, 0.7, 0.66),
 			"nebula_a": Color(0.45, 0.15, 0.35), "nebula_b": Color(0.1, 0.25, 0.4), "planet": Color(0.4, 0.7, 1.0),
 		},
 		"rooms": [

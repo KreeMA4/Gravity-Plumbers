@@ -3,7 +3,7 @@ extends RefCounted
 ## Small helpers for building level geometry and props in code.
 
 ## A static (non-moving) box with collision and a mesh. Returns the StaticBody3D.
-static func static_box(parent: Node, pos: Vector3, size: Vector3, color: Color, rot: Vector3 = Vector3.ZERO) -> StaticBody3D:
+static func static_box(parent: Node, pos: Vector3, size: Vector3, color: Color, rot: Vector3 = Vector3.ZERO, mat: Material = null) -> StaticBody3D:
 	var sb: StaticBody3D = StaticBody3D.new()
 	sb.position = pos
 	sb.rotation = rot
@@ -16,7 +16,7 @@ static func static_box(parent: Node, pos: Vector3, size: Vector3, color: Color, 
 	var bm: BoxMesh = BoxMesh.new()
 	bm.size = size
 	mi.mesh = bm
-	mi.material_override = Mats.solid(color)
+	mi.material_override = mat if mat != null else Mats.solid(color)
 	sb.add_child(mi)
 	parent.add_child(sb)
 	return sb
@@ -70,12 +70,10 @@ static func basic_environment(parent: Node) -> void:
 	e.background_color = Color(0.05, 0.05, 0.12)
 	e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	e.ambient_light_color = Color(0.7, 0.72, 0.9)
-	e.ambient_light_energy = 0.55
+	LevelBuilder.apply_exposure(e)
 	env.environment = e
 	parent.add_child(env)
 	var light: DirectionalLight3D = DirectionalLight3D.new()
 	light.rotation = Vector3(-1.0, 0.5, 0.0)
-	light.light_energy = 1.1
-	light.shadow_enabled = Quality.shadows
-	light.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
+	LevelBuilder.setup_sun(light)
 	parent.add_child(light)

@@ -60,6 +60,24 @@ static func outline_pass(thickness: float) -> Material:
 	return o
 
 
+## Level surfaces (floors, walls, ceilings): toon shading without the rim
+## highlight, plus a world-space pattern so big surfaces read as materials
+## (1 = floor tiles with grout and a soft checker, 2 = wall panels with seams).
+static func surface(color: Color, pattern: int = 0, scale: float = 1.0, strength: float = 0.14) -> Material:
+	var key: String = "surf_%s_%d_%.2f_%.2f" % [color.to_html(), pattern, scale, strength]
+	if _cache.has(key):
+		return _cache[key] as Material
+	var m: ShaderMaterial = ShaderMaterial.new()
+	m.shader = TOON
+	m.set_shader_parameter("albedo", color)
+	m.set_shader_parameter("rim_strength", 0.0)
+	m.set_shader_parameter("pattern", pattern)
+	m.set_shader_parameter("pattern_scale", scale)
+	m.set_shader_parameter("pattern_strength", strength)
+	_cache[key] = m
+	return m
+
+
 ## Plain solid colour (kept for simple debug geometry). Uses the toon look.
 static func solid(color: Color) -> Material:
 	return toon(color)
