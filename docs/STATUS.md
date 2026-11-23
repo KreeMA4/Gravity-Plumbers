@@ -22,10 +22,10 @@
 - M9: Level 2 Zero-G Cafeteria (zero-G dining zone, floating food and canisters, G-Wrench intro, two-player valve, plunger anchoring), Level 3 Asteroid Waterworks (two planetoids with sphere gravity, pipes wrapped round the rock, a zero-G gap with a bridge-pipe puzzle), Level 4 Spin-Cycle Habitat (scheduled gravity cycle floor→wall→ceiling→wall, jobs on every wall, relay switch), Level 5 Reactor Plumbing Panic (3 rooms, storms every 40 s, two coordinated room switches that turn on and aim the reactor field, vents, and THE GREAT CLOG boss fed with goo), Spinner decorations, difficulty scaling, and mid-level join.
 - M10: synthesized audio (`tools/make_audio.py`: 33 SFX plus 3 seamless music loops, with the storm layer crossfading), blip voice for the dispatcher and plumbers (screams when flung), footsteps, landing dust, jump rings, hit-stop, a full Settings screen (graphics, comfort, sound, controls, misc, recent log), blob shadows, a static-mesh batching pass for the draw-call budget, interpolation-safe decorative animation, the physics soak test (`godot -- --soak`, exit code), every UI string collected in `assets/lang/strings.csv`, and final docs.
 
-## VERIFIED by Godot 4.6 in GitHub Actions (run #18, all green)
+## VERIFIED by Godot 4.6 in GitHub Actions (run #35, all green)
 These checks run on every push and every manual build. See `.github/workflows/android-apk.yml`.
 - Headless project import: no errors.
-- **42/42 logic tests pass** (now including the joystick maths: 8 directions, deadzone and analog, on-screen at 7 aspect ratios with notch padding; also gravity, work orders, room codes, network codecs, looks, save migration).
+- **53/53 logic tests pass** (now including gait IK/stride maths, interaction scoring, the Interact network bit, and the joystick maths: 8 directions, deadzone and analog, on-screen at 7 aspect ratios with notch padding; also gravity, work orders, room codes, network codecs, looks, save migration).
 - **Every screen and all 7 levels boot** and run 10 s of simulated time with zero script or engine errors: main menu, gravity test, look test, playground, customize, settings, host/join, tests, hub, levels 1-5 and the workshop.
 - **Physics soak test passes:** 4 bot plumbers, 30 crates and 40 goo blobs, with random gravity flips for 2 minutes of simulated time. No NaN and nothing escaping.
 - **Real OpenGL rendering** (Compatibility renderer through Mesa): every shader compiles. Screenshots of the main menu, the look test, Level 1 and Level 5 are in the `ci-screenshots` artifact.
@@ -36,6 +36,23 @@ These checks run on every push and every manual build. See `.github/workflows/an
   - Camera drag, the Jump button, and multi-touch (move + Grab + Jump) all work. WASD keys still work.
 - **Android export**, with these APK checks passing: signed (debug key), package `org.gravityplumbers.game`, minSdk 24 / targetSdk 35, arm64-v8a, launcher activity, landscape orientation, and all 5 permissions.
 
+- **Gameplay end-to-end test (84 checks, real physics in the Ragdoll Playground):**
+  - **Pickup:**
+    - Walking into items, or holding Grab L+R on them, never picks them up.
+    - The prompt ("PICK UP  Plunger") and the white Interact button appear only in range, in front, and with line of sight. They stay clear of the HUD and thumb controls.
+    - Touch button and keyboard both pick up and drop all 4 tools, a pipe piece and a goo canister.
+    - The faced or closest item wins.
+  - **Grabs and tools:** Grab L/R still grab crates and ledges and brace you. Grab R no longer drops a tool. Use fires the tool. Interact pulls a lever. A carried pipe piece snaps into its port.
+  - **Walking (half stick):**
+    - A foot touches the floor 100% of the time, and the feet alternate (about 4 steps/s).
+    - The pelvis stays about 2 deg from upright when standing and leans about 10 deg when walking.
+    - The knees bend through each step, and planted feet slide at most ~50% of body speed (it was 100%+).
+  - **Run, jump and recovery:**
+    - Running at 4.6 m/s uses the run cycle.
+    - Jump: the knees tuck, it lands, and the knees absorb the landing. Falling then landing works.
+    - Flop leads to ragdoll and automatic recovery, then normal walking.
+    - Walking on a wall and on the ceiling works.
+- **Exposure:** every level is under 0.2% near-white and under 4% blown-out, with saturation 0.35-0.66 (numbers printed per screenshot in the run summary).
 - **Every APK is identifiable** (run #18 onwards): it's named `GravityPlumbers-Android-Debug-Run<N>.apk`, with versionName `0.10.0-run<N>` and versionCode `<N>`. The main menu shows `CI run <N> (commit)`. Each export starts from an empty `build/`. The uploaded artifact is downloaded again and its contents, SHA-256 and version are re-checked. The SHA-256 is on the run summary page and in `BUILD_INFO.txt`.
 
 Bugs that CI found and that are now fixed:
@@ -65,6 +82,7 @@ Bugs that CI found and that are now fixed:
 How to check on your phone: import the project, press Play, and check that the main menu appears. Then open the Debugger tab and check that there are no red errors. Three-finger tap: the overlay shows FPS.
 
 ## Known issues
+- **Walk not perfect yet (measured):** planted feet still slide about half of body speed while walking, and noticeably more when running. The legs sweep back only about half as fast as ideal because the body, not the feet, drives the movement. The pelvis can be about 15 deg off right after stopping before it settles.
 - **Gameplay feel and touch input are unverified.** Godot now runs every screen and level in CI with zero errors, but nobody has played it with fingers yet. Ragdoll feel, touch controls, real networking between phones, and performance on a phone still need testing on a device.
 - **Client latency:** clients feel about 2 × ping + 100 ms on their own plumber (pure host authority). Fine on LAN and hotspots. See NETWORK.md.
 - **Level coordinates were placed by hand without play-testing**, so some objects may need nudging.
