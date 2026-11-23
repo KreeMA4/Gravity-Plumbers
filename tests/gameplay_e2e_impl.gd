@@ -586,11 +586,11 @@ func _sweep() -> void:
 	var defaults: Array = [Tuning.LEG_STRENGTH_ON_FEET, Tuning.LEG_FEED_FORWARD, Tuning.HIPS_UPRIGHT_FRAME,
 		Tuning.STANCE_PRESS, Tuning.UPRIGHT_SERVO_BLEND, Tuning.STANCE_FOOT_FRICTION, Tuning.HIP_REACTION]
 	var configs: Array = [
-		["current", 2.6, true, true, 0.015, 0.35, 0.25, 0.0],
-		["legacy_legs", 1.0, false, false, 0.0, 0.35, 1.2, 0.35],
-		["legacy_legs_servo0.6", 1.0, false, false, 0.0, 0.6, 1.2, 0.35],
-		["boost1_worldhips", 1.0, false, true, 0.0, 0.35, 0.25, 0.0],
-		["boost1_pelviships_r0", 1.0, false, false, 0.0, 0.35, 0.25, 0.0],
+		["current(servo0.85)", 2.6, true, true, 0.015, 0.85, 0.25, 0.0],
+		["servo0.6", 2.6, true, true, 0.015, 0.6, 0.25, 0.0],
+		["servo1.0", 2.6, true, true, 0.015, 1.0, 0.25, 0.0],
+		["servo0.85_boost1.6", 1.6, true, true, 0.015, 0.85, 0.25, 0.0],
+		["servo0.85_stancegrip0.8", 2.6, true, true, 0.015, 0.85, 0.8, 0.0],
 	]
 	quiet_legs = true
 	for c: Variant in configs:
