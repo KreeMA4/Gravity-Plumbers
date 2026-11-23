@@ -478,6 +478,20 @@ func leg_shot(shot_name: String) -> void:
 		prev.current = true
 
 
+## Every muscle's error (deg) between its goal and the actual rotation. A big,
+## persistent error = the muscle is fighting a joint limit or another muscle.
+func muscle_report(tag: String) -> void:
+	var parts: PackedStringArray = PackedStringArray()
+	for role: Variant in plumber.limbs.keys():
+		var lc: LimbController = plumber.limbs[role] as LimbController
+		var goal: Quaternion = lc.target_world if lc.use_world else lc.parent.global_basis.get_rotation_quaternion() * lc.target
+		var err: Vector3 = LimbController.rotation_error(lc.child.global_basis.get_rotation_quaternion(), goal)
+		parts.append("%s %.0f%s" % [str(role), rad_to_deg(err.length()), "w" if lc.use_world else ""])
+	var tq: Quaternion = Plumber._target_basis(plumber.local_up, plumber.facing).get_rotation_quaternion()
+	var perr: float = rad_to_deg(LimbController.rotation_error(plumber.pelvis.global_basis.get_rotation_quaternion(), tq).length())
+	print("  info  muscles[%s]: pelvis-vs-upright %.0f | %s" % [tag, perr, ", ".join(parts)])
+
+
 ## One line of leg diagnostics (printed as "info" so CI shows it).
 func leg_report(tag: String) -> void:
 	var t_hip: float = 0.0
@@ -570,12 +584,13 @@ func _measure_gait(k: float, n: int) -> Dictionary:
 ## settings and print tilt / contact / skating / step rate for each.
 func _sweep() -> void:
 	var defaults: Array = [Tuning.LEG_STRENGTH_ON_FEET, Tuning.LEG_FEED_FORWARD, Tuning.HIPS_UPRIGHT_FRAME,
-		Tuning.STANCE_PRESS, Tuning.UPRIGHT_SERVO_BLEND, Tuning.STANCE_FOOT_FRICTION]
+		Tuning.STANCE_PRESS, Tuning.UPRIGHT_SERVO_BLEND, Tuning.STANCE_FOOT_FRICTION, Tuning.HIP_REACTION]
 	var configs: Array = [
-		["current", 2.6, true, true, 0.015, 0.35, 0.25],
-		["stancegrip0.8", 2.6, true, true, 0.015, 0.35, 0.8],
-		["boost1.6_grip0.8", 1.6, true, true, 0.015, 0.35, 0.8],
-		["servo0.6_grip0.8", 2.6, true, true, 0.015, 0.6, 0.8],
+		["current", 2.6, true, true, 0.015, 0.35, 0.25, 0.0],
+		["legacy_legs", 1.0, false, false, 0.0, 0.35, 1.2, 0.35],
+		["legacy_legs_servo0.6", 1.0, false, false, 0.0, 0.6, 1.2, 0.35],
+		["boost1_worldhips", 1.0, false, true, 0.0, 0.35, 0.25, 0.0],
+		["boost1_pelviships_r0", 1.0, false, false, 0.0, 0.35, 0.25, 0.0],
 	]
 	quiet_legs = true
 	for c: Variant in configs:
@@ -586,9 +601,11 @@ func _sweep() -> void:
 		Tuning.STANCE_PRESS = float(cfg[4])
 		Tuning.UPRIGHT_SERVO_BLEND = float(cfg[5])
 		Tuning.STANCE_FOOT_FRICTION = float(cfg[6])
+		Tuning.HIP_REACTION = float(cfg[7])
 		await place(Vector3(0, 0.05, 0) - fwd() * 12.0, 60)
 		await frames(90)   # stand for a while first (the tilt bug only showed after standing)
 		var idle_tilt: float = rad_to_deg(plumber.pelvis.global_basis.y.normalized().angle_to(plumber.local_up))
+		muscle_report("sweep " + str(cfg[0]))
 		var tilt_sum: float = 0.0
 		var tilt_n: int = 0
 		Input.action_press("move_forward", 0.6)
@@ -613,6 +630,7 @@ func _sweep() -> void:
 	Tuning.STANCE_PRESS = float(defaults[3])
 	Tuning.UPRIGHT_SERVO_BLEND = float(defaults[4])
 	Tuning.STANCE_FOOT_FRICTION = float(defaults[5])
+	Tuning.HIP_REACTION = float(defaults[6])
 
 
 func _check_walk() -> void:
@@ -624,6 +642,7 @@ func _check_walk() -> void:
 	ok(sole_clearance("l") < 0.06 and sole_clearance("r") < 0.06, "idle: both feet on the ground (%.3f, %.3f m)" % [sole_clearance("l"), sole_clearance("r")])
 	ok(plumber.gait_amount < 0.05, "idle: no walk cycle while standing (%.2f)" % plumber.gait_amount)
 	leg_report("idle")
+	muscle_report("idle")
 	await leg_shot("legs_idle")
 	if plumber.limbs.has("knee_l"):
 		var qk: Quaternion = (plumber.limbs["knee_l"] as LimbController).target
@@ -654,6 +673,7 @@ func _check_walk() -> void:
 	ok(v.length() < 0.35, "walk: stops when the stick is released (%.2f m/s)" % v.length())
 	ok(plumber.gait_amount < 0.15, "walk: legs stop stepping (%.2f)" % plumber.gait_amount)
 	leg_report("stopped")
+	muscle_report("stopped")
 	await leg_shot("legs_stopped")
 	ok(sole_clearance("l") < 0.07 and sole_clearance("r") < 0.07, "walk: ends standing on both feet")
 

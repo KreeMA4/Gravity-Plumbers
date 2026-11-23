@@ -881,6 +881,8 @@ func _update_limb_targets(dt: float) -> void:
 		if llc != null:
 			llc.boost = leg_boost
 			llc.feed_forward = Tuning.LEG_FEED_FORWARD
+			if role.begins_with("hip"):
+				llc.reaction = Tuning.HIP_REACTION
 	var hips_world: bool = on_feet and Tuning.HIPS_UPRIGHT_FRAME
 	_hips_in_world(hips_world)
 	if on_feet:
