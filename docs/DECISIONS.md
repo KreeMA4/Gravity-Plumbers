@@ -74,3 +74,4 @@ One line per decision: what was decided, and why.
   - Soft sun shadows are on from Medium quality up.
 
   CI prints near-white / clipped / saturation / contrast numbers for every screenshot.
+- **Dynamic props use continuous collision detection.** The soak test caught a crate leaving the room at 24 m/s after a sideways gravity shift. Falling the width of a room reaches about 20 m/s, which is one 0.4 m wall per physics tick, so it tunnelled through. `Geo.dynamic_box` now sets `continuous_cd`.

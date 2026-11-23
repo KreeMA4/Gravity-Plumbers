@@ -27,6 +27,10 @@ static func dynamic_box(parent: Node, pos: Vector3, size: Vector3, color: Color,
 	var rb: RigidBody3D = RigidBody3D.new()
 	rb.position = pos
 	rb.mass = mass
+	# Crates falling across a room under sideways gravity reach 20+ m/s = one
+	# wall thickness (0.4 m) per physics tick; without CCD they can tunnel out
+	# (the soak test caught one at 24 m/s leaving the room).
+	rb.continuous_cd = true
 	var cs: CollisionShape3D = CollisionShape3D.new()
 	var shape: BoxShape3D = BoxShape3D.new()
 	shape.size = size
