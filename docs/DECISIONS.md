@@ -75,3 +75,11 @@ One line per decision: what was decided, and why.
 
   CI prints near-white / clipped / saturation / contrast numbers for every screenshot.
 - **Dynamic props use continuous collision detection.** The soak test caught a crate leaving the room at 24 m/s after a sideways gravity shift. Falling the width of a room reaches about 20 m/s, which is one 0.4 m wall per physics tick, so it tunnelled through. `Geo.dynamic_box` now sets `continuous_cd`.
+- **Locomotion fixes found by measuring the real physics in CI** (gameplay E2E leg diagnostics, side-view leg screenshots and per-muscle error reports):
+  1. **Knee and elbow hinge limits had the wrong sign.** Jolt's hinge angle runs opposite to the muscles' rotation about +X, so knees and elbows were pinned straight. Knees are now [-0.1, 2.4] and elbows [-2.5, 0.15].
+  2. **The gait joints lagged.** The joint muscles (about 3 Hz) were too slow for a 2-3 Hz step cycle and averaged out. Leg muscles now get velocity feed-forward and are 2.6x stronger while on foot. Ragdoll still scales them down to limp.
+  3. **Stilt-leg feedback.** Foot targets came from the measured hip height plus a press below the floor. Legs that lifted the pelvis asked for even longer legs. Targets now come from the desired ride height.
+  4. **Feet pivoted the body forward.** The plumber is pushed by forces on the body, so a gripping foot tipped it over. While walking, a planted foot has friction 0.25 and a swinging foot 0.05; standing still both grip at 1.2.
+  5. **The upright controller was under-powered.** The acceleration PD could not be made stiff enough at 60 Hz without going unstable, so the pelvis sat 20-77 deg off upright. It is now a velocity servo (`UPRIGHT_SERVO_*`), stable at any stiffness and scaled by `support`, so ragdoll, recovery and getting knocked over are unchanged. Measured: 1.5 deg standing, 7-11 deg natural lean while walking.
+
+  Hip targets are set in the upright walking frame, and hip muscles don't push back on the pelvis. The leg-control knobs live in `Tuning` (`LEG_STRENGTH_ON_FEET`, `LEG_FEED_FORWARD`, `HIPS_UPRIGHT_FRAME`, `HIP_REACTION`, `STANCE_PRESS`, `STANCE_FOOT_FRICTION`, `SWING_FOOT_FRICTION`).
