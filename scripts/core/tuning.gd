@@ -33,7 +33,7 @@ var PLUMBER_LINEAR_DAMP: float = 0.15
 var PLUMBER_ANGULAR_DAMP: float = 1.5   ## Higher = less spinning like a top when flung.
 var FOOT_FRICTION: float = 1.2          ## Grippy feet.
 var SWING_FOOT_FRICTION: float = 0.05   ## A foot in its swing phase slides instead of catching the floor.
-var STANCE_FOOT_FRICTION: float = 0.25  ## A planted foot while walking: placed, but not a pivot that tips you over.
+var STANCE_FOOT_FRICTION: float = 1.2   ## A planted foot grips (the upright servo keeps the body from pivoting over it).
 var BODY_FRICTION: float = 0.35         ## Slippery everything else.
 
 # --- Active ragdoll controller ----------------------------------------------

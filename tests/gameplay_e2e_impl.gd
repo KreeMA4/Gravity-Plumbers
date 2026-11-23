@@ -532,6 +532,7 @@ func _measure_gait(k: float, n: int) -> Dictionary:
 	var prev_sign: float = 0.0
 	var skate_sum: float = 0.0
 	var skate_n: int = 0
+	var sweep_sum: float = 0.0
 	var hmin: float = 99.0
 	var hmax: float = -99.0
 	var vmax: float = 0.0
@@ -572,6 +573,8 @@ func _measure_gait(k: float, n: int) -> Dictionary:
 				sv -= plumber.local_up * sv.dot(plumber.local_up)
 				skate_sum += sv.length() / vh.length()
 				skate_n += 1
+				# How fast the planted foot moves backward relative to the hips (should be ~ -1 x body speed).
+				sweep_sum += (sv - vh).dot(vh.normalized()) / vh.length()
 		var kn: float = joint_angle("shin_l", "thigh_l")
 		knee_min = minf(knee_min, kn)
 		knee_max = maxf(knee_max, kn)
@@ -582,7 +585,7 @@ func _measure_gait(k: float, n: int) -> Dictionary:
 	var dist: float = (plumber.get_center() - start).dot(f)
 	var secs: float = float(samples) / float(Engine.physics_ticks_per_second)
 	return {"contact": float(contact) / maxf(1.0, samples), "air": float(airborne) / maxf(1.0, samples),
-		"steps_per_s": float(flips) / maxf(secs, 0.01), "skate": skate_sum / maxf(1.0, skate_n), "skate_samples": skate_n,
+		"steps_per_s": float(flips) / maxf(secs, 0.01), "skate": skate_sum / maxf(1.0, skate_n), "skate_samples": skate_n, "stance_sweep": sweep_sum / maxf(1.0, skate_n),
 		"bob": hmax - hmin, "vmax": vmax, "dist": dist, "knee_bend": knee_max - knee_min, "knee_deepest": knee_min}
 
 
