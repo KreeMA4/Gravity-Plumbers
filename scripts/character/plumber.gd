@@ -707,13 +707,18 @@ func _apply_support(dt: float) -> void:
 	_upright(chest, tq * Quaternion(Vector3.RIGHT, lean) * Quaternion(Vector3.BACK, -roll * 0.6), k * 0.8, dt)
 
 
-func _upright(rb: RigidBody3D, goal: Quaternion, k: float, dt: float) -> void:
+## Keeps pelvis/chest upright. A velocity servo: each tick the body's spin is
+## blended toward the spin that closes the error in ~1/UPRIGHT_SERVO_RATE s.
+## Unlike the old acceleration PD (which could not be made stiff enough at
+## 60 Hz without going unstable, and let the legs tip the body 20-60 deg),
+## this stays stable at any stiffness. `k` = support (0 while ragdolled).
+func _upright(rb: RigidBody3D, goal: Quaternion, k: float, _dt: float) -> void:
 	var err: Vector3 = LimbController.rotation_error(rb.global_basis.get_rotation_quaternion(), goal)
-	var acc: Vector3 = err * Tuning.UPRIGHT_KP * k - rb.angular_velocity * Tuning.UPRIGHT_KD * sqrt(k)
-	acc = acc.limit_length(Tuning.JOINT_MAX_ANG_ACCEL)
-	var dw: Vector3 = acc * dt
-	if dw.is_finite():
-		rb.angular_velocity += dw
+	var want: Vector3 = (err * Tuning.UPRIGHT_SERVO_RATE).limit_length(Tuning.UPRIGHT_MAX_SPIN)
+	var blend: float = clampf(Tuning.UPRIGHT_SERVO_BLEND * k, 0.0, 1.0)
+	var w: Vector3 = rb.angular_velocity.lerp(want, blend)
+	if w.is_finite():
+		rb.angular_velocity = w
 
 
 static func _target_basis(up: Vector3, fwd: Vector3) -> Basis:

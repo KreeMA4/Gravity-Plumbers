@@ -48,7 +48,10 @@ var HIPS_UPRIGHT_FRAME: bool = true     ## Hip targets in the upright walking fr
 var LEG_STRENGTH_ON_FEET: float = 2.6   ## Leg muscle multiplier while standing/walking (ragdoll still scales it down).
 var JOINT_MAX_ANG_ACCEL: float = 900.0  ## Clamp on joint correction (rad/s^2) so nothing explodes.
 var UPRIGHT_KP: float = 260.0           ## How hard chest and pelvis turn to stay upright.
-var UPRIGHT_KD: float = 26.0
+var UPRIGHT_KD: float = 26.0            ## (legacy PD gains, kept for reference; the servo below is used)
+var UPRIGHT_SERVO_RATE: float = 9.0     ## Upright correction speed (1/s): ~0.11 s to close a tilt.
+var UPRIGHT_SERVO_BLEND: float = 0.35   ## Per-tick blend toward the corrective spin (higher = stiffer).
+var UPRIGHT_MAX_SPIN: float = 12.0      ## Cap on the corrective spin (rad/s).
 var TURN_RATE: float = 9.0              ## How fast the body turns to face where it walks (1/s).
 var RIDE_HEIGHT: float = 0.86           ## Pelvis height above the floor while standing.
 var RIDE_SPRING: float = 140.0          ## Spring holding the pelvis at ride height.

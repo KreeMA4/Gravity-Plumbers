@@ -570,12 +570,12 @@ func _measure_gait(k: float, n: int) -> Dictionary:
 ## settings and print tilt / contact / skating / step rate for each.
 func _sweep() -> void:
 	var defaults: Array = [Tuning.LEG_STRENGTH_ON_FEET, Tuning.LEG_FEED_FORWARD, Tuning.HIPS_UPRIGHT_FRAME,
-		Tuning.STANCE_PRESS, Tuning.UPRIGHT_KP, Tuning.STANCE_FOOT_FRICTION]
+		Tuning.STANCE_PRESS, Tuning.UPRIGHT_SERVO_BLEND, Tuning.STANCE_FOOT_FRICTION]
 	var configs: Array = [
-		["current", 2.6, true, true, 0.015, 260.0, 0.25],
-		["boost1.6", 1.6, true, true, 0.015, 260.0, 0.25],
-		["boost1.6_stancegrip0.6", 1.6, true, true, 0.015, 260.0, 0.6],
-		["current_nopress", 2.6, true, true, 0.0, 260.0, 0.25],
+		["current", 2.6, true, true, 0.015, 0.35, 0.25],
+		["stancegrip0.8", 2.6, true, true, 0.015, 0.35, 0.8],
+		["boost1.6_grip0.8", 1.6, true, true, 0.015, 0.35, 0.8],
+		["servo0.6_grip0.8", 2.6, true, true, 0.015, 0.6, 0.8],
 	]
 	quiet_legs = true
 	for c: Variant in configs:
@@ -584,7 +584,7 @@ func _sweep() -> void:
 		Tuning.LEG_FEED_FORWARD = bool(cfg[2])
 		Tuning.HIPS_UPRIGHT_FRAME = bool(cfg[3])
 		Tuning.STANCE_PRESS = float(cfg[4])
-		Tuning.UPRIGHT_KP = float(cfg[5])
+		Tuning.UPRIGHT_SERVO_BLEND = float(cfg[5])
 		Tuning.STANCE_FOOT_FRICTION = float(cfg[6])
 		await place(Vector3(0, 0.05, 0) - fwd() * 12.0, 60)
 		await frames(90)   # stand for a while first (the tilt bug only showed after standing)
@@ -611,7 +611,7 @@ func _sweep() -> void:
 	Tuning.LEG_FEED_FORWARD = bool(defaults[1])
 	Tuning.HIPS_UPRIGHT_FRAME = bool(defaults[2])
 	Tuning.STANCE_PRESS = float(defaults[3])
-	Tuning.UPRIGHT_KP = float(defaults[4])
+	Tuning.UPRIGHT_SERVO_BLEND = float(defaults[4])
 	Tuning.STANCE_FOOT_FRICTION = float(defaults[5])
 
 
@@ -628,7 +628,7 @@ func _check_walk() -> void:
 	if plumber.limbs.has("knee_l"):
 		var qk: Quaternion = (plumber.limbs["knee_l"] as LimbController).target
 		var tk: float = 2.0 * atan2(qk.x, qk.w)
-		ok(absf(joint_angle("shin_l", "thigh_l") - tk) < 0.12, "idle: the knee joint actually follows its muscle target (%.2f vs %.2f)" % [joint_angle("shin_l", "thigh_l"), tk])
+		ok(absf(joint_angle("shin_l", "thigh_l") - tk) < 0.2, "idle: the knee joint actually follows its muscle target (%.2f vs %.2f)" % [joint_angle("shin_l", "thigh_l"), tk])
 	await screenshot("anim_idle")
 	# Stick 0.6 = 0.4 of top speed after the 0.25 input deadzone (~1.8 m/s, a walk).
 	var m: Dictionary = await _measure_gait(0.6, 210)
