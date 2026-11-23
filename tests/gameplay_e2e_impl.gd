@@ -560,12 +560,18 @@ func _measure_gait(k: float, n: int) -> Dictionary:
 		var v: Vector3 = plumber.pelvis.linear_velocity
 		var vh: Vector3 = v - Vector3.UP * v.y
 		vmax = maxf(vmax, vh.length())
-		var side: String = "l" if cl < cr else "r"
-		if minf(cl, cr) < 0.03 and vh.length() > 0.8:
-			var sv: Vector3 = sole_velocity(side)
-			sv.y = 0.0
-			skate_sum += sv.length() / vh.length()
-			skate_n += 1
+		# Skating = a foot that should be PLANTED (mid-stance in the gait cycle,
+		# touching the floor) sliding along. Swing feet are expected to move.
+		var duty: float = Gait.duty(plumber.gait_run)
+		for side: String in ["l", "r"]:
+			var ph: float = plumber.walk_phase + (0.0 if side == "l" else PI)
+			var u: float = Gait.foot_cycle(ph, duty).x
+			var cs: float = cl if side == "l" else cr
+			if Gait.in_stance(ph, duty) and absf(u) < 0.6 and cs < 0.05 and vh.length() > 0.8:
+				var sv: Vector3 = sole_velocity(side)
+				sv -= plumber.local_up * sv.dot(plumber.local_up)
+				skate_sum += sv.length() / vh.length()
+				skate_n += 1
 		var kn: float = joint_angle("shin_l", "thigh_l")
 		knee_min = minf(knee_min, kn)
 		knee_max = maxf(knee_max, kn)
@@ -576,7 +582,7 @@ func _measure_gait(k: float, n: int) -> Dictionary:
 	var dist: float = (plumber.get_center() - start).dot(f)
 	var secs: float = float(samples) / float(Engine.physics_ticks_per_second)
 	return {"contact": float(contact) / maxf(1.0, samples), "air": float(airborne) / maxf(1.0, samples),
-		"steps_per_s": float(flips) / maxf(secs, 0.01), "skate": skate_sum / maxf(1.0, skate_n),
+		"steps_per_s": float(flips) / maxf(secs, 0.01), "skate": skate_sum / maxf(1.0, skate_n), "skate_samples": skate_n,
 		"bob": hmax - hmin, "vmax": vmax, "dist": dist, "knee_bend": knee_max - knee_min, "knee_deepest": knee_min}
 
 
@@ -634,7 +640,6 @@ func _sweep() -> void:
 
 
 func _check_walk() -> void:
-	await _sweep()
 	await clear_items()
 	await place(Vector3(0, 0.05, 0) - fwd() * 12.0, 60)
 	# Idle first: standing with both feet down, legs settled.
@@ -655,7 +660,7 @@ func _check_walk() -> void:
 	ok(float(m["dist"]) > 2.0, "walk: moved forward (%.2f m)" % float(m["dist"]))
 	ok(float(m["knee_bend"]) > 0.35 and float(m["knee_deepest"]) < -0.3, "walk: knees bend and straighten through the step (range %.2f rad, deepest %.2f)" % [float(m["knee_bend"]), float(m["knee_deepest"])])
 	ok(float(m["contact"]) > 0.9, "walk: a foot is on the ground %.0f%% of the time (no floating)" % (100.0 * float(m["contact"])))
-	ok(float(m["skate"]) < 0.5, "walk: planted foot doesn't skate (sole speed %.0f%% of body speed)" % (100.0 * float(m["skate"])))
+	ok(int(m["skate_samples"]) > 10 and float(m["skate"]) < 0.5, "walk: planted foot doesn't skate (sole speed %.0f%% of body speed over %d planted samples)" % [100.0 * float(m["skate"]), int(m["skate_samples"])])
 	ok(float(m["steps_per_s"]) > 1.2, "walk: left and right feet alternate (%.1f steps/s)" % float(m["steps_per_s"]))
 	ok(float(m["bob"]) > 0.008 and float(m["bob"]) < 0.16, "walk: body bobs with the steps (%.3f m)" % float(m["bob"]))
 	# Screenshot mid-stride.
